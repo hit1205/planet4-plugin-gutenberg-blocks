@@ -33,7 +33,6 @@ class P4_ShortcodeConverterTest extends P4_UnitTestCase {
 	 *
 	 * @dataProvider social_media_shortcodes_provider
 	 * @dataProvider timeline_shortcodes_provider
-	 * @dataProvider take_action_boxout_shortcodes_provider
 	 */
 	public function test_shortcodes_conversion( $shortcode, $expected ) {
 
@@ -151,45 +150,6 @@ class P4_ShortcodeConverterTest extends P4_UnitTestCase {
 				],
 
 
-		];
-	}
-
-	/**
-	 * Planet4 blocks shortocodes provider.
-	 *
-	 * @return array
-	 */
-	public function take_action_boxout_shortcodes_provider(): array {
-		return [
-			// 1-5
-
-			'take action boxout with title and language' =>
-				[
-					'[shortcake_take_action_boxout custom_title="Stand against plastic pollution" custom_excerpt="Tell the world’s biggest plastic polluters to invest in reusable ways to deliver their products." custom_link="https://act.greenpeace.org/page/49013/petition/1" custom_link_text="Take Action" custom_link_new_tab="false" tag_ids="67" background_image="21162" /]',
-					'<!-- wp:planet4-blocks/take-action-boxout {"custom_title":"Stand against plastic pollution","custom_excerpt":"Tell the world\u2019s biggest plastic polluters to invest in reusable ways to deliver their products.","custom_link":"https://act.greenpeace.org/page/49013/petition/1","custom_link_text":"Take Action","custom_link_new_tab":false,"tag_ids":[67],"background_image":21162} /-->',
-				],
-
-
-			'take action boxout with title and language' =>
-				[
-					'[shortcake_take_action_boxout take_action_page="32" /]',
-					'<!-- wp:planet4-blocks/take-action-boxout {"take_action_page":32} /-->',
-				],
-			'take action boxout with title and language' =>
-				[
-					'[shortcake_take_action_boxout take_action_page="32" custom_link_new_tab="false" /]',
-					'<!-- wp:planet4-blocks/take-action-boxout {"take_action_page":32} /-->',
-				],
-			'take action boxout with title and language' =>
-				[
-					'[shortcake_take_action_boxout custom_title="Ciao mamma" custom_excerpt="Ciao mamma I am a ballon and I floart " custom_link="https://jira.greenpeace.org/browse/PLANET-4024" custom_link_text="FLOA T ME! " custom_link_new_tab="true" tag_ids="89,67" background_image="24159" /]',
-					'<!-- wp:planet4-blocks/take-action-boxout {"custom_title":"Ciao mamma","custom_excerpt":"Ciao mamma I am a ballon and I floart ","custom_link":"https://jira.greenpeace.org/browse/PLANET-4024","custom_link_text":"FLOA T ME! ","custom_link_new_tab":true,"tag_ids":[89,67],"background_image":24159} /-->',
-				],
-			'take action boxout with title and language' =>
-				[
-					'[shortcake_take_action_boxout custom_title="Cusrtom stuf " custom_link="https://www.google.com" custom_link_text="I AM A CUSTOM LINK" custom_link_new_tab="true" background_image="24020" /]',
-					'<!-- wp:planet4-blocks/take-action-boxout {"custom_title":"Cusrtom stuf ","custom_link":"https://www.google.com","custom_link_text":"I AM A CUSTOM LINK","custom_link_new_tab":true,"background_image":24020} /-->',
-				],
 		];
 	}
 
