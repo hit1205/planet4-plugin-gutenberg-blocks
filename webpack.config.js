@@ -89,6 +89,7 @@ const cssConfig = {
     SpreadsheetStyle: './assets/src/styles/blocks/Spreadsheet/SpreadsheetStyle.scss',
     TimelineStyle: './assets/src/styles/blocks/Timeline/TimelineStyle.scss',
     TimelineEditorStyle: './assets/src/styles/blocks/Timeline/TimelineEditorStyle.scss',
+    CoversStyle: './assets/src/styles/blocks/Covers/CoversStyle.scss',
   },
   output: {
     filename: '[name].js',
