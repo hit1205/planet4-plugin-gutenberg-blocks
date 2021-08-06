@@ -1,0 +1,76 @@
+@mixin hubspot-form {
+  
+  .hbspt-form {  
+    .hs-form {
+      fieldset {
+        &.form-columns-1, &.form-columns-2 {
+          .hs-form-field {
+            label {}
+
+            .input {
+              .hs-input {
+                border-radius: 4px;
+                border: solid 1px $grey-20;
+                padding: 14px 16px;
+              }
+            }
+
+            .hs-error-msgs {
+              padding-left: 0;
+              list-style: none;
+            }
+          }
+        }
+
+        &.form-columns-1 {
+          .input {
+            width: 100%;
+
+            .hs-input {
+              width: 100%;
+            }
+          }
+        }
+  
+        &.form-columns-2 {
+          display: flex;
+
+          .input {
+            background-color: yellow;
+            margin-right: 30px;
+            width: 50%;
+
+            .hs-input {
+              // width: 100%;
+
+            }
+
+            &:last-child {
+              background-color: green;
+            }
+
+          }
+        }
+      }
+    }
+
+    .hs-button {
+      color: $white;
+      font-size: 16px;
+      padding: 12px 0;
+      font-family: $roboto;
+      font-style: bold;
+      font-weight: 700;
+      border: none;
+      border-radius: 4px;
+      
+      &.primary {
+        background: $orange;
+        
+        &.large {
+          width: 100%;
+        } 
+      }
+    }
+  }
+};

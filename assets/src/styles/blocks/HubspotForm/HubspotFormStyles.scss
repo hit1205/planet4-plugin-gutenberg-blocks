@@ -1,0 +1,106 @@
+@import './HubspotFormsOverrides.scss';
+
+.hubspot-form {
+  position: relative;
+  font-family: $roboto;
+  height: 1200px;
+
+  &--image-full-width {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  &__wrapper {
+    display: flex;
+    flex-direction: column;
+    background: $white;
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: $grey-80;
+
+    @include medium-and-up {
+      flex-direction: row;
+      padding: 156px 32px;
+    }
+    
+    @include large-and-up {
+      flex-direction: row;
+      padding: 144px 162px;
+      justify-content: space-between;
+    }
+  }
+
+  &__content {
+    padding: 32px 16px 26px;
+    // padding: 144px 162px;
+    
+    &--heading {
+      @include large-and-up {
+        margin-right: 120px;
+      }
+    }
+
+    &--form {
+      flex: 0 0 auto;
+      width: 100%;
+      min-height: 525px;
+      background-color: white;
+      border-radius: 0;
+      
+      @include large-and-up {
+        width: 450px;
+        border-radius: 4px;
+      }
+    }
+  }
+  
+  &__title {
+    font-size: 28px;
+    line-height: 100%;
+    text-align: left;
+    color: $white;
+    margin-bottom: 24px;
+  }
+  
+  &__text {
+    font-size: 16px;
+    line-height: 26px;
+    text-align: left;
+    color: $white;
+  }
+  
+  &__button {
+    border: solid 1px $white;
+    background: transparent;
+    padding: 13px 61px;
+    border-radius: 4px;
+    color: $white;
+  }
+  
+  &__form-header {
+    // background: $grey-10;
+  }
+  
+  &__form-title {
+    color: $grey-80;
+    font-size: 20px;
+    margin-bottom: 24px;
+  }         
+  
+  &__form-text {
+    color: $grey-80;
+    font-family: $lora;
+  }
+  
+  &__form-wrapper {
+    @include hubspot-form;
+    background: $grey-10;
+    
+    @include large-and-up {
+      // border-radius: 4px;
+    }
+  }
+}
