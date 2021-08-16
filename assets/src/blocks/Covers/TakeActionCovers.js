@@ -27,7 +27,9 @@ export const TakeActionCovers = ({ initialRowsLimit, covers, row, loadMoreCovers
             tags,
             image,
             excerpt,
-            button_text
+            button_text,
+            alt_text,
+            srcset,
           } = cover;
           const hideCover = !!initialRowsLimit && index >= row * amountPerRow;
 
@@ -37,7 +39,7 @@ export const TakeActionCovers = ({ initialRowsLimit, covers, row, loadMoreCovers
 
           return (
             <div key={title} className='col-lg-4 col-md-6 cover-card-column'>
-              <div className='cover-card card-one' style={{ backgroundImage: `url(${image})` }}>
+              <div className='cover-card'>
                 <a
                   className='cover-card-overlay'
                   data-ga-category='Take Action Covers'
@@ -46,20 +48,21 @@ export const TakeActionCovers = ({ initialRowsLimit, covers, row, loadMoreCovers
                   href={button_link}
                   aria-label={__('Take action cover, link to ' + title, 'planet4-blocks')}
                 />
+                <img src={image} />
                 <div className='cover-card-content'>
-                  {tags && tags.map(tag => (
+                  {/* Regardless of how many tags there are, we only show the first one */}
+                  {tags && (
                     <a
-                      key={tag.name}
+                      key={tags[0].name}
                       className='cover-card-tag'
                       data-ga-category='Take Action Covers'
                       data-ga-action='Navigation Tag'
                       data-ga-label='n/a'
-                      href={tag.href}
+                      href={tags[0].href}
                     >
-                      <span aria-label='hashtag'>#</span>
-                      {tag.name}
+                      {tags[0].name}
                     </a>
-                  ))}
+                  )}
                   <a
                     className='cover-card-heading'
                     data-ga-category='Take Action Covers'
@@ -69,10 +72,10 @@ export const TakeActionCovers = ({ initialRowsLimit, covers, row, loadMoreCovers
                   >
                     {title}
                   </a>
-                  <p>{excerpt}</p>
+                  <p className="cover-card-excerpt">{excerpt}</p>
                 </div>
                 <a
-                  className='btn btn-action btn-block cover-card-btn'
+                  className='btn cover-card-btn btn-primary'
                   data-ga-category='Take Action Covers'
                   data-ga-action='Call to Action'
                   data-ga-label='n/a'
