@@ -1,5 +1,5 @@
 import { FormGenerator } from './FormGenerator';
-import { ShareButtons } from './ShareButtons';
+import { ShareButtons } from '../../components/ShareButtons/ShareButtons';
 import { RichText, BlockControls } from '@wordpress/block-editor';
 import { ToolbarGroup } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
@@ -157,7 +157,6 @@ const SideContent = ({attributes, setAttributes}) => {
         keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={[]}
-        characterLimit={60}
         multiline="false"
       />
       <RichText
@@ -167,7 +166,6 @@ const SideContent = ({attributes, setAttributes}) => {
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         keepPlaceholderOnFocus={true}
         allowedFormats={[]}
-        characterLimit={400}
       />
     </div>
     </>
@@ -205,7 +203,6 @@ const Signup = ({attributes, setAttributes}) => {
             keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             allowedFormats={[]}
-            characterLimit={60}
             multiline="false"
           />
           {en_form_style === 'side-style' &&
@@ -220,7 +217,6 @@ const Signup = ({attributes, setAttributes}) => {
             placeholder={__('Enter form description', 'planet4-blocks-backend')}
             keepPlaceholderOnFocus={true}
             allowedFormats={[]}
-            characterLimit={400}
           />
         </div>
 
@@ -244,8 +240,10 @@ const ThankYou = ({attributes, setAttributes}) => {
     donate_text,
     donatelink,
     social,
+    social_accounts,
   } = attributes;
 
+  let social_params = {...social, utm_medium: 'thank-you'};
 
   const toAttribute = (attributeName) => {
     return value => {
@@ -279,7 +277,6 @@ const ThankYou = ({attributes, setAttributes}) => {
             keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             allowedFormats={[]}
-            characterLimit={60}
             multiline="false"
           />
         </header>
@@ -291,7 +288,6 @@ const ThankYou = ({attributes, setAttributes}) => {
           placeholder={__('Enter description', 'planet4-blocks-backend')}
           keepPlaceholderOnFocus={true}
           allowedFormats={[]}
-          characterLimit={400}
           multiline="false"
         />
 
@@ -306,13 +302,12 @@ const ThankYou = ({attributes, setAttributes}) => {
               keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               allowedFormats={[]}
-              characterLimit={400}
               multiline="false"
             />
           </div>
 
           <div className="social-media form-group">
-            <ShareButtons {...{social, accounts: []}} />
+            <ShareButtons {...{social_params, social_accounts}} />
           </div>
 
           {! donate_button_checkbox &&
@@ -326,7 +321,6 @@ const ThankYou = ({attributes, setAttributes}) => {
                   placeholder={__('Enter donate message', 'planet4-blocks-backend')}
                   keepPlaceholderOnFocus={true}
                   allowedFormats={['core/bold', 'core/italic', 'core/link']}
-                  characterLimit={400}
                   multiline="false"
                 />
               </div>
@@ -342,7 +336,6 @@ const ThankYou = ({attributes, setAttributes}) => {
                   keepPlaceholderOnFocus={true}
                   withoutInteractiveFormatting
                   allowedFormats={[]}
-                  characterLimit={60}
                   multiline="false"
                 />
               </div>

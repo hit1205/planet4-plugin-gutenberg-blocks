@@ -11,7 +11,6 @@ namespace P4GBKS;
 use P4\MasterTheme\Features;
 use P4\MasterTheme\MigrationLog;
 use P4\MasterTheme\Migrations\M001EnableEnFormFeature;
-use P4\MasterTheme\PostCampaign;
 use P4GBKS\Controllers;
 use P4GBKS\Views\View;
 use WP_CLI;
@@ -186,7 +185,6 @@ final class Loader {
 			add_action( 'plugins_loaded', [ $this, 'load_i18n' ] );
 			add_filter( 'style_loader_tag', [ $this, 'enqueue_deferred_assets' ], 10, 3 );
 			add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_public_assets' ] );
-			add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_campaigns_assets' ] );
 
 			return;
 		}
@@ -355,7 +353,10 @@ final class Loader {
 
 		// Variables reflected from PHP to JS.
 		$reflection_vars = [
-			'dateFormat' => get_option( 'date_format' ),
+			'dateFormat'                => get_option( 'date_format' ),
+			'siteUrl'                   => site_url(),
+			'themeUrl'                  => get_template_directory_uri(),
+			'enable_analytical_cookies' => $option_values['enable_analytical_cookies'] ?? '',
 		];
 		wp_localize_script( 'planet4-blocks-editor-script', 'p4bk_vars', $reflection_vars );
 
@@ -401,10 +402,13 @@ final class Loader {
 		self::enqueue_local_script( 'post_action', 'public/js/post_action.js', [ 'jquery' ] );
 
 		// Variables reflected from PHP to JS.
+		$option_values   = get_option( 'planet4_options' );
 		$reflection_vars = [
-			'dateFormat' => get_option( 'date_format' ),
-			'siteUrl'    => site_url(),
-			'themeUrl'   => get_template_directory_uri(),
+			'dateFormat'                 => get_option( 'date_format' ),
+			'siteUrl'                    => site_url(),
+			'themeUrl'                   => get_template_directory_uri(),
+			'enable_analytical_cookies'  => $option_values['enable_analytical_cookies'] ?? '',
+			'enable_google_consent_mode' => $option_values['enable_google_consent_mode'] ?? '',
 		];
 		wp_localize_script( 'planet4-blocks-script', 'p4bk_vars', $reflection_vars );
 
@@ -448,44 +452,6 @@ final class Loader {
 		return defined( 'ALLOW_EXPERIMENTAL_FEATURES' )
 			&& ALLOW_EXPERIMENTAL_FEATURES
 			&& Features::is_active( Features::THEME_EDITOR_NON_LOGGED_IN );
-	}
-
-	/**
-	 * Load assets for the frontend.
-	 */
-	public function enqueue_campaigns_assets() {
-		// campaign-theme assets.
-		if ( 'campaign' !== get_post_type() ) {
-			return;
-		}
-
-		$post = get_post();
-
-		$campaign_theme = $post->theme ?? $post->custom['_campaign_page_template'] ?? null;
-
-		if ( ! is_string( $campaign_theme ) || empty( $campaign_theme )
-			|| ! in_array( $campaign_theme, PostCampaign::LEGACY_THEMES, true )
-		) {
-			return;
-		}
-
-		wp_enqueue_style(
-			'theme_antarctic',
-			P4GBKS_PLUGIN_URL . "/assets/build/theme_$campaign_theme.min.css",
-			[
-				'planet4-blocks-style',
-			],
-			self::file_ver( P4GBKS_PLUGIN_DIR . "/assets/build/theme_$campaign_theme.min.css" )
-		);
-
-		wp_enqueue_style(
-			'theme_antarctic',
-			P4GBKS_PLUGIN_URL . "/assets/build/theme_$campaign_theme.min.css",
-			[
-				'plugin-blocks',
-			],
-			self::file_ver( P4GBKS_PLUGIN_DIR . "/assets/build/theme_$campaign_theme.min.css" )
-		);
 	}
 
 	/**

@@ -5,8 +5,8 @@ import { resolveField } from '../fromThemeOptions/fromThemeOptions';
 import isShallowEqual from '@wordpress/is-shallow-equal';
 import { savePreviewMeta } from '../../saveMetaToPreview';
 import { PostParentLink } from './PostParentLink';
-import { LegacyThemeSettings } from './LegacyThemeSettings';
-import { NewThemeSettings } from './NewThemeSettings';
+import { ThemeSettings } from './ThemeSettings';
+import { applyChangesToDom, LocalThemeSettings, themeJsonUrl } from './LocalThemeSettings';
 
 const isLegacy= theme => [
   'default',
@@ -19,17 +19,42 @@ const isLegacy= theme => [
   'forest',
 ].includes(theme) || !theme;
 
-const loadTheme = async (value) => {
+const loadOptions = async (value) => {
   if ( value === '' || !value ) {
     value = 'default';
   }
   const withoutNew = value.replace(/-new$/, '');
   const name = isLegacy(withoutNew) ? withoutNew : 'default';
   const baseUrl = window.location.href.split( '/wp-admin' )[ 0 ];
-  const themeJsonUrl = `${ baseUrl }/wp-content/themes/planet4-master-theme/campaign_themes/${ name }.json`;
+  const optionsJsonUrl = `${ baseUrl }/wp-content/themes/planet4-master-theme/theme_options/${ name }.json`;
 
-  const json = await fetch(themeJsonUrl);
-  return await json.json();
+  const response = await fetch(optionsJsonUrl);
+  return await response.json();
+}
+const makeDefaultOrNull = ( result, field ) => {
+  // Adding this check to prevent a crash. Probably the previous code can be rewritten to not produce null, but
+  // that would probably cascade into many changes and this is code we'll probably remove soon.
+  if (!field) {
+    return result;
+  }
+  return {
+    ...result,
+    [ field.id ]: field.default || null,
+  };
+}
+
+// Check if the field has a value in the current post meta that is not allowed anymore by the new options.
+const gotInvalidated = (field, options, meta) => {
+  const resolvedField = resolveField(options, field.id, meta);
+
+  const currentValue = meta[ field.id ];
+
+  // Either the field does not exist on the new theme, or it has no options.
+  if ( !resolvedField || !resolvedField.options ) {
+    return !!currentValue;
+  }
+
+  return !(resolvedField.options.some( option => option.value === currentValue) );
 }
 
 export class CampaignSidebar extends Component {
@@ -44,7 +69,7 @@ export class CampaignSidebar extends Component {
   constructor( props ) {
     super( props );
     this.state = {
-      theme: null,
+      options: null,
       meta: null,
       parent: null,
     };
@@ -53,41 +78,19 @@ export class CampaignSidebar extends Component {
 
   // When theme switches, we need to check if any options were previously chosen that are not allowed in the new theme.
   // For each of these, we either set them to the default value
-  async handleThemeSwitch( metaKey, value, meta ) {
-    const newTheme = await loadTheme( value )
-    const prevTheme = this.state.theme;
-    this.setState({ theme: newTheme });
+  async handleThemeSwitch( metaKey, newThemeName, meta ) {
+    const prevOptions = this.state.options;
+    const options = await loadOptions( newThemeName )
+    this.setState({ options });
 
     // Loop through the new theme's fields, and check whether any of the already chosen options has a value that is not
     // available anymore.
-    const invalidatedFields = prevTheme.fields.filter( field => {
-
-      const resolvedField = resolveField(newTheme, field.id, meta);
-
-      const currentValue = meta[ field.id ];
-
-      if ( !resolvedField || !resolvedField.options ) {
-        return !!currentValue;
-      }
-
-      return !(resolvedField.options.some( option => option.value === currentValue) );
-
-    } ).map( field => resolveField( newTheme, field.id, meta ) )
+    const invalidatedFields = prevOptions?.fields.filter(field => gotInvalidated(field, options, meta)) || [];
 
     // Set each of the invalidated fields to their default value, or unset them.
-    return invalidatedFields.reduce( ( result, field ) => {
-      // Adding this check to prevent a crash. Probably the previous code can be rewritten to not produce null, but
-      // that would probably cascade into many changes and this is code we'll probably remove soon.
-      if (!field) {
-        return result;
-      }
-      return {
-        ...result,
-        [ field.id ]: field.default || null,
-      };
-    }, {
-      [ metaKey ]: value,
-    } );
+    return invalidatedFields
+      .map(field => resolveField(options, field.id, meta))
+      .reduce(makeDefaultOrNull, { [metaKey]: newThemeName });
   }
 
   componentDidMount() {
@@ -101,16 +104,27 @@ export class CampaignSidebar extends Component {
       if (themeName === '') {
         themeName = 'default';
       }
+      // This part currently also detects non-related changes to the meta. Not changing that for now, we should put
+      // these values in a single meta key, or even store them in a block in post_content.
       if (isShallowEqual(this.state.meta, meta)) {
         return;
       }
       this.setState({ meta });
       savePreviewMeta();
       if (
-        this.state.theme === null
+        this.state.options === null
       ) {
-        const theme = await loadTheme(themeName);
-        this.setState({ theme: theme });
+        const options = await loadOptions(themeName);
+        this.setState({ options });
+        if (themeName) {
+          try {
+            const response = await fetch(`${ themeJsonUrl + themeName.replace('-new', '') }.json`);
+            const theme = await response.json();
+            applyChangesToDom(theme, []);
+          } catch (e) {
+            console.log(`Failed loading config for ${ themeName }`);
+          }
+        }
       }
     } );
     wp.data.subscribe( () => {
@@ -126,27 +140,27 @@ export class CampaignSidebar extends Component {
   }
 
   render() {
-    const { parent, theme, meta } = this.state;
+    const { parent, options, meta } = this.state;
 
-    const isLegacyTheme = !theme || isLegacy(theme.id);
+    const isLegacyTheme = !options || isLegacy(options.id);
 
     return (
       <>
         <PluginSidebarMoreMenuItem
           target={ CampaignSidebar.getId() }
           icon={ CampaignSidebar.getIcon() }>
-          Campaign Options
+          { __('Theme Options', 'planet4-blocks-backend') }
         </PluginSidebarMoreMenuItem>
         <PluginSidebar
           name={ CampaignSidebar.getId() }
-          title={ __('Campaign Options', 'planet4-blocks-backend') }
+          title={ __('Theme Options', 'planet4-blocks-backend') }
         >
           { !!parent && <PostParentLink parent={ parent }/> }
-          { !parent && meta && <NewThemeSettings currentTheme={meta.theme} onChange={ async value => {
+          { !parent && meta && <LocalThemeSettings currentTheme={meta.theme} onChange={ async value => {
             this.handleThemeSwitch('theme', value, meta);
           } }/> }
-          { !parent && <LegacyThemeSettings
-            theme={ theme }
+          { !parent && <ThemeSettings
+            theme={ options }
             handleThemeSwitch={ this.handleThemeSwitch }
             isLegacyTheme={isLegacyTheme}
           /> }
