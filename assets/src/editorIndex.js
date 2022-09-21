@@ -2,15 +2,13 @@ import { ArticlesBlock } from './blocks/Articles/ArticlesBlock';
 import { registerColumnsBlock } from './blocks/Columns/ColumnsBlock';
 import { CookiesBlock } from './blocks/Cookies/CookiesBlock';
 import { CounterBlock } from './blocks/Counter/CounterBlock';
-import { CoversBlock } from './blocks/OldCovers/CoversBlock';
-import { GalleryBlock } from './blocks/Gallery/GalleryBlock';
 import { HappypointBlock } from './blocks/Happypoint/HappypointBlock';
 import { registerMediaBlock } from './blocks/Media/MediaBlock';
 import { registerSocialMediaBlock } from './blocks/SocialMedia/SocialMediaBlock';
 import { SocialMediaCardsBlock } from './blocks/SocialMediaCards/SocialMediaCardsBlock';
 import { registerSplittwocolumnsBlock } from './blocks/Splittwocolumns/register';
 import { registerSubmenuBlock } from './blocks/Submenu/SubmenuBlock';
-import { TakeactionboxoutBlock } from './blocks/Takeactionboxout/TakeactionboxoutBlock';
+import { registerTakeActionBoxoutBlock } from './blocks/TakeActionBoxout/TakeActionBoxoutBlock';
 import { registerTimelineBlock } from './blocks/Timeline/TimelineBlock';
 import { addBlockFilters } from './BlockFilters';
 import { setupImageBlockExtension } from './ImageBlockExtension';
@@ -21,16 +19,16 @@ import { setupCustomSidebar } from './setupCustomSidebar';
 import { setUpCssVariables } from './connectCssVariables';
 import { SubPagesBlock } from './blocks/SubPages/SubPagesBlock';
 import { blockEditorValidation } from './BlockEditorValidation';
-import { ENFormBlock } from './blocks/OldENForm/ENFormBlock';
 import { registerGuestBookBlock } from './blocks/GuestBook/GuestBookBlock';
+import { registerBlock as registerShareButtonsBlock } from './blocks/ShareButtons/ShareButtonsBlock';
+import { registerPageHeaderBlock } from './blocks/PageHeader/PageHeaderBlock';
+import { registerActionPageDummyBlock } from './blocks/ActionPageDummy/ActionPageDummyBlock';
 
 blockEditorValidation();
 new ArticlesBlock();
 registerColumnsBlock();
 new CookiesBlock();
 new CounterBlock();
-new CoversBlock();
-new GalleryBlock();
 new HappypointBlock();
 registerMediaBlock();
 registerSocialMediaBlock();
@@ -39,10 +37,12 @@ registerSplittwocolumnsBlock();
 registerSpreadsheetBlock();
 registerSubmenuBlock();
 new SubPagesBlock();
-new TakeactionboxoutBlock();
-new ENFormBlock();
+registerTakeActionBoxoutBlock();
 registerTimelineBlock();
 registerGuestBookBlock();
+registerShareButtonsBlock();
+registerPageHeaderBlock();
+registerActionPageDummyBlock();
 
 addBlockFilters();
 setupImageBlockExtension();
@@ -51,3 +51,18 @@ replaceTaxonomyTermSelectors();
 setupCustomSidebar();
 setUpCssVariables();
 blockEditorValidation();
+
+const { registerBlockVariation } = wp.blocks;
+const { __ } = wp.i18n;
+
+registerBlockVariation('core/group', {
+  name: 'group-stretched-link',
+  title: __('Stretched Link', 'planet4-blocks-backend'),
+  description: __('Make the entire block contents clickable, using the first link inside.', 'planet4-blocks-backend'),
+  attributes: { className: 'group-stretched-link' },
+  scope: ['inserter', 'transform'],
+  isActive: (blockAttributes) => {
+    return blockAttributes.className === 'group-stretched-link';
+  },
+  icon: 'admin-links',
+});

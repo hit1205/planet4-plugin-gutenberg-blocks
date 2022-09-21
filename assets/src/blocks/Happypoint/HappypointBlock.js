@@ -1,4 +1,5 @@
 import { HappypointEditor } from './HappypointEditor';
+import { HappyPointV1 } from './deprecated/HappyPointV1.js';
 
 export class HappypointBlock {
   constructor() {
@@ -32,13 +33,29 @@ export class HappypointBlock {
         },
         load_iframe: {
           type: 'boolean',
+        },
+        use_embed_code: {
+          type: 'boolean',
+        },
+        embed_code: {
+          type: 'string',
+        },
+        override_default_content: {
+          type: 'boolean',
           default: false
+        },
+        local_content_provider: {
+          type: 'string',
+          default: 'none'
         }
       },
       edit: HappypointEditor,
       save() {
         return null;
-      }
+      },
+      deprecated: [
+        HappyPointV1
+      ]
     });
   }
 }

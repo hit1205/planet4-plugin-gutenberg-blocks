@@ -100,6 +100,10 @@
     text-shadow: 1px 1px 3px $grey-80;
   }
 
+  &:visited {
+    color: $yellow;
+  }
+
   @include medium-and-up {
     font-size: 1.5rem;
     margin-bottom: 15px;
@@ -149,11 +153,31 @@
 
 .split-two-column-item-link {
   text-decoration: none;
-  color: $yellow;
 
   &:hover {
-    color: $yellow;
     text-decoration: underline;
+  }
+
+  &:visited {
+    color: var(--link--color, $link-color);
+  }
+
+  &:after {
+    content: "";
+    pointer-events: none;
+    margin-inline-start: 7px;
+    height: .7rem;
+    width: .7rem;
+    display: inline-block;
+    mask-image: url("../../public/images/icons/chevron.svg");
+    mask-repeat: no-repeat;
+    mask-size: contain;
+    background-repeat: no-repeat;
+    background-color: currentColor;
+
+    html[dir="rtl"] & {
+      rotate: 180deg;
+    }
   }
 }
 
@@ -279,36 +303,25 @@
 
     a {
       display: block;
-      padding: 45px $n15;
+      padding: 45px $sp-2;
 
       &:after {
         content: "";
-        position: absolute;
-        top: 40%;
-        right: 15px;
         pointer-events: none;
-        background-image: url("../../public/images/icons/angle-right.svg");
-        background-position: 50% 50%;
-        background-size: 1rem 1rem;
-        background-repeat: no-repeat;
-        margin-right: 2px;
-        height: 2.2rem;
-        width: 2.2rem;
-        margin-bottom: -2px;
+        height: 1.7rem;
+        width: 1.7rem;
         display: inline-block;
-        @supports (mask-repeat: no-repeat) or (-webkit-mask-repeat: no-repeat) {
-          & {
-            background-image: none;
-            background-color: $yellow;
-            mask-image: url("../../public/images/icons/angle-right.svg");
-            mask-repeat: no-repeat;
-            margin-right: 0;
-          }
-        }
+        mask-image: url("../../public/images/icons/chevron.svg");
+        mask-repeat: no-repeat;
+        mask-size: contain;
+        background-repeat: no-repeat;
+        background-color: currentColor;
+        position: absolute;
+        right: 10px;
 
         html[dir="rtl"] & {
+          left: 10px;
           right: auto;
-          left: 15px;
         }
       }
     }

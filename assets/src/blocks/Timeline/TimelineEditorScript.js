@@ -17,7 +17,7 @@ import { debounce } from 'lodash';
 
 const { RichText } = wp.blockEditor;
 const { __ } = wp.i18n;
-const TIMELINE_JS_VERSION = '3.8.10';
+const TIMELINE_JS_VERSION = '3.8.12';
 
 const positions = [
   {label: 'Bottom', value: 'bottom'},
@@ -52,7 +52,7 @@ const renderEdit = (
 ) => {
   return (
     <InspectorControls>
-      <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+      <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
         <URLInput
           label={__('Google Sheets URL', 'planet4-blocks-backend')}
           placeholder={__('Enter URL', 'planet4-blocks-backend')}
@@ -105,7 +105,6 @@ const renderView = (attributes, toAttribute, scriptLoaded, stylesLoaded) => {
             placeholder={__('Enter title', 'planet4-blocks-backend')}
             value={attributes.timeline_title}
             onChange={toAttribute('timeline_title')}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             maxLength={40}
             multiline="false"
@@ -119,14 +118,13 @@ const renderView = (attributes, toAttribute, scriptLoaded, stylesLoaded) => {
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         value={attributes.description}
         onChange={toAttribute('description')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         maxLength={200}
         allowedFormats={['core/bold', 'core/italic']}
       />
       {!attributes.google_sheets_url &&
         <div className="block-edit-mode-warning components-notice is-warning">
-          { __( 'Please include a Sheet URL.', 'planet4-blocks' ) }
+          { __( 'Please include a Sheet URL.', 'planet4-blocks-backend' ) }
         </div>
       }
       {attributes.google_sheets_url && scriptLoaded && stylesLoaded &&

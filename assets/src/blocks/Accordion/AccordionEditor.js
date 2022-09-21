@@ -44,7 +44,6 @@ const renderView = ({ title, description, tabs, className }, setAttributes, isSe
           placeholder={__('Enter title', 'planet4-blocks-backend')}
           value={title}
           onChange={toAttribute('title')}
-          keepPlaceholderOnFocus={true}
           withoutInteractiveFormatting
           multiline="false"
           allowedFormats={[]}
@@ -56,7 +55,6 @@ const renderView = ({ title, description, tabs, className }, setAttributes, isSe
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         value={description}
         onChange={toAttribute('description')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={['core/bold', 'core/italic']}
       />
@@ -68,7 +66,6 @@ const renderView = ({ title, description, tabs, className }, setAttributes, isSe
             placeholder={__('Enter headline', 'planet4-blocks-backend')}
             value={tab.headline}
             onChange={updateTabAttribute('headline', index)}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             multiline="false"
             allowedFormats={[]}
@@ -80,7 +77,6 @@ const renderView = ({ title, description, tabs, className }, setAttributes, isSe
               placeholder={__('Enter text', 'planet4-blocks-backend')}
               value={tab.text}
               onChange={updateTabAttribute('text', index)}
-              keepPlaceholderOnFocus={true}
               allowedFormats={['core/bold', 'core/italic']}
             />
             {tab.button ?
@@ -91,7 +87,6 @@ const renderView = ({ title, description, tabs, className }, setAttributes, isSe
                   placeholder={__('Button text', 'planet4-blocks-backend')}
                   value={tab.button.button_text}
                   onChange={updateTabAttribute('button_text', index)}
-                  keepPlaceholderOnFocus={true}
                   withoutInteractiveFormatting
                   multiline="false"
                   allowedFormats={[]}
@@ -128,7 +123,7 @@ const renderEdit = ({ tabs }, setAttributes, updateTabAttribute) => {
 
   return (
     <InspectorControls>
-      <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+      <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
         {tabs.map((tab, index) => {
           const { button } = tab;
           if (!button) {

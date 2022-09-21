@@ -1,8 +1,9 @@
 import {ENFormEditor} from './ENFormEditor';
+import {ENFormV1} from './deprecated/ENFormV1.js';
 import {frontendRendered} from '../frontendRendered';
 
 const { __ } = wp.i18n;
-const BLOCK_NAME = 'planet4-blocks/enform-beta';
+const BLOCK_NAME = 'planet4-blocks/enform';
 
 const attributes = {
   en_page_id: { type: 'integer', },
@@ -22,8 +23,8 @@ const attributes = {
   thankyou_social_media_message: { type: 'string', },
   donate_button_checkbox: { type: 'boolean', },
   donate_text: { type: 'string', default: __('Donate', 'planet4-engagingnetworks')},
-  custom_donate_url: { type: 'string', },
   thankyou_url: { type: 'string', },
+  custom_donate_url: { type: 'string', },
   background: { type: 'integer', },
   background_image_src: { type: 'string', default: '' },
   background_image_srcset: { type: 'string', },
@@ -39,16 +40,27 @@ export const registerENForm = () => {
   const { registerBlockType } = wp.blocks;
 
   registerBlockType(BLOCK_NAME, {
-    title: 'EN Form (beta)',
+    title: 'EN Form',
     icon: 'feedback',
-    category: 'planet4-blocks-beta',
+    category: 'planet4-blocks',
+    supports: {
+      multiple: false,
+    },
     styles: [
-      {name: 'full-width-bg', label: 'Full width with background'},
-      {name: 'full-width', label: 'Full width'},
+      {name: 'full-width-bg', label: 'Full page width with background'},
+      {name: 'full-width', label: 'Page body/text size width'},
       {name: 'side-style', label: 'Form on the side', isDefault: true},
     ],
     attributes,
     edit: ENFormEditor,
-    save: frontendRendered(BLOCK_NAME),
+    save: (props) => {
+      // Sort attributes in a predictable order
+      let ordered_attrs = Object.fromEntries(Object.entries(props.attributes).sort());
+
+      return frontendRendered(BLOCK_NAME)(ordered_attrs, props?.className);
+    },
+    deprecated: [
+      ENFormV1
+    ]
   });
 }

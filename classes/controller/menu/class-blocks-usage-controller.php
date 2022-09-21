@@ -8,9 +8,19 @@
 
 namespace P4GBKS\Controllers\Menu;
 
-use P4\MasterTheme\Exception\SqlInIsEmpty;
 use P4\MasterTheme\SqlParameters;
+use P4\MasterTheme\Exception\SqlInIsEmpty;
+use P4GBKS\Patterns\Block_Pattern;
+use P4GBKS\Search\Block\BlockUsage;
+use P4GBKS\Search\Block\BlockUsageTable;
+use P4GBKS\Search\Block\BlockUsageApi;
+use P4GBKS\Search\Block\Query\Parameters as BlockParameters;
+use P4GBKS\Search\Pattern\Query\Parameters as PatternParameters;
+use P4GBKS\Search\Pattern\PatternUsage;
+use P4GBKS\Search\Pattern\PatternUsageTable;
+use P4GBKS\Search\Pattern\PatternUsageApi;
 use WP_Block_Type_Registry;
+use WP_Block_Patterns_Registry;
 
 if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 
@@ -47,6 +57,8 @@ if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 		 */
 		private function hooks() {
 			add_action( 'rest_api_init', [ $this, 'plugin_blocks_report_register_rest_route' ] );
+			BlockUsageTable::set_hooks();
+			PatternUsageTable::set_hooks();
 		}
 
 		/**
@@ -59,9 +71,16 @@ if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 				[
 					'methods'             => 'GET',
 					'callback'            => [ $this, 'plugin_blocks_report_json' ],
-					'permission_callback' => function () {
-						return true;
-					},
+					'permission_callback' => '__return_true',
+				]
+			);
+			register_rest_route(
+				'plugin_blocks/v3',
+				'/plugin_blocks_report/',
+				[
+					'methods'             => 'GET',
+					'callback'            => [ $this, 'plugin_blocks_report_rest_api' ],
+					'permission_callback' => '__return_true',
 				]
 			);
 		}
@@ -76,6 +95,49 @@ if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 				$report = $this->plugin_blocks_report( 'json' );
 				wp_cache_add( $cache_key, $report, '', 3600 );
 			}
+
+			return $report;
+		}
+
+		/**
+		 * Generates blocks/pages report.
+		 */
+		public function plugin_blocks_report_rest_api() {
+			global $wpdb;
+
+			$types = \get_post_types(
+				[
+					'public'              => true,
+					'exclude_from_search' => false,
+				]
+			);
+
+			// Get posts types counts.
+			$params  = new SqlParameters();
+			$sql     = 'SELECT post_type, count(ID) AS post_count
+				FROM ' . $params->identifier( $wpdb->posts ) . '
+				WHERE post_status = ' . $params->string( 'publish' ) . '
+					AND post_type IN ' . $params->string_list( $types ) . '
+				GROUP BY post_type';
+			$results = $wpdb->get_results(
+				// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+				$wpdb->prepare( $sql, $params->get_values() ),
+				\ARRAY_A
+			);
+
+			$post_types = array_combine(
+				array_column( $results, 'post_type' ),
+				array_map( 'intval', array_column( $results, 'post_count' ) )
+			);
+
+			// Group results.
+			$block_api   = new BlockUsageApi();
+			$pattern_api = new PatternUsageApi();
+			$report      = [
+				'block_types'    => $block_api->get_count(),
+				'block_patterns' => $pattern_api->get_count(),
+				'post_types'     => $post_types,
+			];
 
 			return $report;
 		}
@@ -96,7 +158,108 @@ if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 					'plugin_blocks_report',
 					[ $this, 'plugin_blocks_report' ]
 				);
+
+				// Experimental block usage page, hidden from menu.
+				add_submenu_page(
+					P4GBKS_PLUGIN_SLUG_NAME,
+					__( 'Report (Beta)', 'planet4-blocks-backend' ),
+					__( 'Report (Beta)', 'planet4-blocks-backend' ),
+					'manage_options',
+					'plugin_blocks_report_beta',
+					[ $this, 'plugin_blocks_report_beta' ]
+				);
+
+				add_submenu_page(
+					P4GBKS_PLUGIN_SLUG_NAME,
+					__( 'Pattern Report (Beta)', 'planet4-blocks-backend' ),
+					__( 'Pattern Report (Beta)', 'planet4-blocks-backend' ),
+					'manage_options',
+					'plugin_patterns_report',
+					[ $this, 'plugin_patterns_report' ]
+				);
 			}
+		}
+
+		/**
+		 * Beta block usage report page.
+		 *
+		 * @todo before replacing current one:
+		 * - review json report / keep or replace with new search
+		 */
+		public function plugin_blocks_report_beta() {
+			// Nonce verify.
+			if ( isset( $_REQUEST['filter_action'] ) ) {
+				check_admin_referer( 'bulk-' . BlockUsageTable::PLURAL );
+			}
+
+			// Create table.
+			$args  = [
+				'block_usage'    => new BlockUsage(),
+				'block_registry' => WP_Block_Type_Registry::get_instance(),
+			];
+			$table = new BlockUsageTable( $args );
+
+			// Prepare data.
+			$special_filter = isset( $_REQUEST['unregistered'] ) ? 'unregistered'
+				: ( isset( $_REQUEST['unallowed'] ) ? 'unallowed' : null );
+			$table->prepare_items(
+				BlockParameters::from_request( $_REQUEST ),
+				$_REQUEST['group'] ?? null,
+				$special_filter
+			);
+
+			// Display data.
+			echo '<div class="wrap">
+				<h1 class="wp-heading-inline">Block usage</h1>
+				<hr class="wp-header-end">';
+
+			echo '<form id="blocks-report" method="get">';
+			$table->views();
+			$table->search_box( 'Search in block attributes', 'blocks-report' );
+			$table->display();
+			echo '<input type="hidden" name="action"
+				value="' . esc_attr( BlockUsageTable::ACTION_NAME ) . '"/>';
+			echo '</form>';
+			echo '</div>';
+		}
+
+		/**
+		 * Beta block usage report page.
+		 *
+		 * @todo before replacing current one:
+		 * - review json report / keep or replace with new search
+		 */
+		public function plugin_patterns_report() {
+			// Nonce verify.
+			if ( isset( $_REQUEST['filter_action'] ) ) {
+				check_admin_referer( 'bulk-' . PatternUsageTable::PLURAL );
+			}
+
+			// Create table.
+			$args  = [
+				'pattern_usage'    => new PatternUsage(),
+				'pattern_registry' => WP_Block_Patterns_Registry::get_instance(),
+			];
+			$table = new PatternUsageTable( $args );
+
+			// Prepare data.
+			$table->prepare_items(
+				PatternParameters::from_request( $_REQUEST ),
+				$_REQUEST['group'] ?? null
+			);
+
+			// Display data.
+			echo '<div class="wrap">
+				<h1 class="wp-heading-inline">Pattern usage</h1>
+				<hr class="wp-header-end">';
+
+			echo '<form id="patterns-report" method="get">';
+			$table->views();
+			$table->display();
+			echo '<input type="hidden" name="action"
+				value="' . esc_attr( PatternUsageTable::ACTION_NAME ) . '"/>';
+			echo '</form>';
+			echo '</div>';
 		}
 
 		/**
@@ -354,13 +517,17 @@ if ( ! class_exists( 'Blocks_Usage_Controller' ) ) {
 			);
 
 			$core_block_types = [
-				'html',
-				'table',
 				'button',
-				'separator',
-				'spacer',
-				'shortcode',
+				'columns',
 				'group',
+				'html',
+				'media-text',
+				'query',
+				'query-pagination',
+				'separator',
+				'shortcode',
+				'spacer',
+				'table',
 			];
 
 			return array_merge( $p4_block_types, $core_block_types );

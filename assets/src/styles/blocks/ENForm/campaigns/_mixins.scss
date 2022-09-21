@@ -1,6 +1,6 @@
 @mixin campaign-en-block($form-caption-transform: false) {
   .form-caption {
-    padding-bottom: $space-xxl;
+    padding-bottom: $sp-8;
 
     h1, h2, h3 {
       @if $form-caption-transform {
@@ -42,14 +42,6 @@
       margin-bottom: 0;
       box-sizing: border-box;
       width: 100%;
-    }
-
-    #enform-content {
-      .title-and-description {
-        h2 {
-          font-family: var(--headings--font-family, var(--header-primary-font)) !important;
-        }
-      }
     }
   }
 }

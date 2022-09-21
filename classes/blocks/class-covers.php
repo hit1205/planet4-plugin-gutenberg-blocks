@@ -8,6 +8,9 @@
 
 namespace P4GBKS\Blocks;
 
+use P4\MasterTheme\Settings\InformationArchitecture as IA;
+use P4\MasterTheme\ActionPage;
+
 /**
  * Class Covers
  *
@@ -51,16 +54,28 @@ class Covers extends Base_Block {
 	private const CAMPAIGN_COVER_TYPE    = 'campaign';
 	private const CONTENT_COVER_TYPE     = 'content';
 
-	const POSTS_LIMIT = 50;
+	/**
+	 * Layout options.
+	 *
+	 * @var string CAROUSEL_LAYOUT.
+	 * @var string GRID_LAYOUT.
+	 */
+	private const CAROUSEL_LAYOUT = 'carousel';
+	private const GRID_LAYOUT     = 'grid';
+
+	const POSTS_LIMIT                 = 50;
+	const POSTS_LIMIT_CAROUSEL_LAYOUT = 12; // When Carousel layout is selected we want no more than 21 covers.
 
 	/**
 	 * Covers constructor.
 	 */
 	public function __construct() {
 		register_block_type(
-			'planet4-blocks/covers-beta',
+			'planet4-blocks/covers',
 			[  // - Register the block for the editor
 				'editor_script'   => 'planet4-blocks',
+				'style'           => static::get_full_block_name() . '-style',
+				'editor_style'    => static::get_full_block_name() . '-editor-style',
 				'render_callback' => static function ( $attributes ) {
 					if ( isset( $attributes['covers_view'] ) ) {
 						$attributes['initialRowsLimit'] = '3' === $attributes['covers_view'] ? 0 : intval( $attributes['covers_view'] );
@@ -74,6 +89,10 @@ class Covers extends Base_Block {
 					if ( is_numeric( $attributes['cover_type'] ) ) {
 						$old_cover_type           = $attributes['cover_type'];
 						$attributes['cover_type'] = self::OLD_COVER_TYPES[ $old_cover_type ];
+					}
+
+					if ( empty( $attributes['readMoreText'] ) ) {
+						$attributes['readMoreText'] = __( 'Load more', 'planet4-blocks' );
 					}
 
 					$attributes['covers'] = self::get_covers( $attributes );
@@ -125,6 +144,21 @@ class Covers extends Base_Block {
 						'type'    => 'integer',
 						'default' => self::VERSION,
 					],
+					'layout'           => [
+						'type'    => 'string',
+						'default' => self::GRID_LAYOUT,
+					],
+					'isExample'        => [
+						'type'    => 'boolean',
+						'default' => false,
+					],
+					'exampleCovers'    => [
+						'type' => 'object',
+					],
+					'readMoreText'     => [
+						'type'    => 'string',
+						'default' => __( 'Load more', 'planet4-blocks' ),
+					],
 				],
 			]
 		);
@@ -175,6 +209,7 @@ class Covers extends Base_Block {
 		$tag_ids       = $fields['tags'] ?? [];
 		$options       = get_option( 'planet4_options' );
 		$parent_act_id = $options['act_page'];
+		$layout        = $fields['layout'] ?? self::GRID_LAYOUT;
 
 		if ( 0 !== absint( $parent_act_id ) ) {
 			$args = [
@@ -187,7 +222,7 @@ class Covers extends Base_Block {
 					'title'      => 'ASC',
 				],
 				'suppress_filters' => false,
-				'numberposts'      => self::POSTS_LIMIT,
+				'numberposts'      => self::numberposts( $layout ),
 			];
 			// If user selected a tag to associate with the Take Action page covers.
 			if ( ! empty( $tag_ids ) ) {
@@ -203,6 +238,37 @@ class Covers extends Base_Block {
 	}
 
 	/**
+	 * Get posts that are Action pages (p4_action).
+	 *
+	 * @param array $fields This is the array of fields of this block.
+	 *
+	 * @return \WP_Post[]
+	 */
+	private static function filter_posts_for_action_pages( $fields ): array {
+		$tag_ids = $fields['tags'] ?? [];
+		$layout  = $fields['layout'] ?? self::GRID_LAYOUT;
+
+		$args = [
+			'post_type'        => ActionPage::POST_TYPE,
+			'post_status'      => 'publish',
+			'orderby'          => [
+				'date'  => 'DESC',
+				'title' => 'ASC',
+			],
+			'suppress_filters' => false,
+			'numberposts'      => self::numberposts( $layout ),
+		];
+		// If user selected a tag to associate with the Take Action page covers.
+		if ( ! empty( $tag_ids ) ) {
+			$args['tag__in'] = $tag_ids;
+		}
+
+		// Ignore sniffer rule, arguments contain suppress_filters.
+		// phpcs:ignore
+		return get_posts( $args ) ?? [];
+	}
+
+	/**
 	 * Get specific posts.
 	 *
 	 * @param array $fields This is the array of fields of this block.
@@ -211,6 +277,7 @@ class Covers extends Base_Block {
 	 */
 	private static function filter_posts_by_ids( $fields ) {
 		$post_ids = $fields['posts'] ?? [];
+		$layout   = $fields['layout'] ?? self::GRID_LAYOUT;
 
 		if ( ! empty( $post_ids ) ) {
 
@@ -220,12 +287,14 @@ class Covers extends Base_Block {
 				'post_status'      => 'publish',
 				'post__in'         => $post_ids,
 				'suppress_filters' => false,
-				'numberposts'      => self::POSTS_LIMIT,
+				'numberposts'      => self::numberposts( $layout ),
 			];
 
 			// If cover type is take action pages set post_type to page.
 			if ( isset( $fields['cover_type'] ) && self::TAKE_ACTION_COVER_TYPE === $fields['cover_type'] ) {
-				$args['post_type'] = 'page';
+				$args['post_type'] = [ 'page', ActionPage::POST_TYPE ];
+			} else {
+				$args['post_type'] = [ 'post', 'page' ];
 			}
 
 			// Ignore sniffer rule, arguments contain suppress_filters.
@@ -247,6 +316,7 @@ class Covers extends Base_Block {
 
 		$tag_ids    = $fields['tags'] ?? [];
 		$post_types = $fields['post_types'] ?? [];
+		$layout     = $fields['layout'] ?? self::GRID_LAYOUT;
 
 		$query_args = [
 			'post_type'      => 'post',
@@ -255,7 +325,7 @@ class Covers extends Base_Block {
 				'title' => 'ASC',
 			],
 			'no_found_rows'  => true,
-			'posts_per_page' => self::POSTS_LIMIT,
+			'posts_per_page' => self::numberposts( $layout ),
 		];
 
 		// Get all posts with the specific tags.
@@ -319,9 +389,14 @@ class Covers extends Base_Block {
 
 		// Get user defined tags from backend.
 		$tag_ids = $fields['tags'] ?? [];
+		$layout  = $fields['layout'] ?? self::GRID_LAYOUT;
 
 		if ( empty( $tag_ids ) ) {
 			return [];
+		}
+
+		if ( self::CAROUSEL_LAYOUT === $layout && count( $tag_ids ) > self::POSTS_LIMIT_CAROUSEL_LAYOUT ) {
+			$tag_ids = array_slice( $tag_ids, 0, self::POSTS_LIMIT_CAROUSEL_LAYOUT );
 		}
 
 		$tags = get_tags( [ 'include' => $tag_ids ] );
@@ -334,15 +409,15 @@ class Covers extends Base_Block {
 
 		foreach ( $tags as $tag ) {
 			$tag_remapped  = [
-				'name' => html_entity_decode( $tag->name ),
-				'slug' => $tag->slug,
-				'href' => get_tag_link( $tag ),
+				'title' => html_entity_decode( $tag->name ),
+				'slug'  => $tag->slug,
+				'href'  => get_tag_link( $tag ),
 			];
 			$attachment_id = get_term_meta( $tag->term_id, 'tag_attachment_id', true );
 
 			if ( ! empty( $attachment_id ) ) {
 				$tag_remapped['image']    = wp_get_attachment_image_src( $attachment_id, 'medium_large' );
-				$tag_remapped['src_set']  = wp_get_attachment_image_srcset( $attachment_id, 'medium_large' );
+				$tag_remapped['srcset']   = wp_get_attachment_image_srcset( $attachment_id, 'medium_large' ) ?? 'false';
 				$tag_remapped['alt_text'] = get_post_meta( $attachment_id, '_wp_attachment_image_alt', true );
 			}
 
@@ -367,6 +442,19 @@ class Covers extends Base_Block {
 			$actions = self::filter_posts_by_ids( $fields );
 		} else {
 			$actions = self::filter_posts_for_act_pages( $fields );
+			if ( IA::is_active( IA::ACTION_POST_TYPE ) ) {
+				$actions = array_merge(
+					self::filter_posts_for_action_pages( $fields ),
+					$actions
+				);
+				// Sort by published date, recent first.
+				usort(
+					$actions,
+					function ( $a, $b ) {
+						return $b->post_date <=> $a->post_date;
+					}
+				);
+			}
 		}
 
 		$covers = [];
@@ -381,18 +469,23 @@ class Covers extends Base_Block {
 				if ( is_array( $wp_tags ) && $wp_tags ) {
 					foreach ( $wp_tags as $wp_tag ) {
 						$tags[] = [
-							'name' => $wp_tag->name,
+							'name' => html_entity_decode( $wp_tag->name ),
 							'href' => get_tag_link( $wp_tag ),
 						];
 					}
 				}
+
+				$img_id = get_post_thumbnail_id( $action );
+
 				$covers[] = [
 					'tags'        => $tags ?? [],
-					'title'       => get_the_title( $action ),
+					'title'       => html_entity_decode( get_the_title( $action ) ),
 					'excerpt'     => $action->post_excerpt,
 					'image'       => get_the_post_thumbnail_url( $action, 'large' ),
+					'srcset'      => wp_get_attachment_image_srcset( $img_id, 'articles-medium-large' ) ?? 'false',
+					'alt_text'    => get_the_post_thumbnail_url( $action, 'large' ),
 					'button_text' => $cover_button_text,
-					'button_link' => get_permalink( $action->ID ),
+					'link'        => get_permalink( $action->ID ),
 				];
 			}
 		}
@@ -407,38 +500,52 @@ class Covers extends Base_Block {
 	 *
 	 * @return array
 	 */
-	private static function populate_posts_for_cfc( &$fields ) {
+	private static function populate_posts_for_cfc( $fields ): array {
 		$post_ids = $fields['posts'] ?? [];
+		$posts    = empty( $post_ids )
+			? self::filter_posts_for_cfc( $fields )
+			: self::filter_posts_by_ids( $fields );
 
-		if ( ! empty( $post_ids ) ) {
-			$posts = self::filter_posts_by_ids( $fields );
-		} else {
-			$posts = self::filter_posts_for_cfc( $fields );
+		if ( empty( $posts ) ) {
+			return [];
 		}
 
 		$posts_array = [];
+		foreach ( $posts as $post ) {
+			$post_data = [
+				'title'          => $post->post_title,
+				'excerpt'        => $post->post_excerpt,
+				'alt_text'       => '',
+				'image'          => '',
+				'srcset'         => '',
+				'link'           => get_permalink( $post ),
+				'date_formatted' => get_the_date( '', $post->ID ),
+			];
 
-		if ( ! empty( $posts ) ) {
-
-			foreach ( $posts as $post ) {
-
-				$post->alt_text  = '';
-				$post->thumbnail = '';
-				$post->srcset    = '';
-
-				if ( has_post_thumbnail( $post ) ) {
-					$post->thumbnail = get_the_post_thumbnail_url( $post, 'medium' );
-					$img_id          = get_post_thumbnail_id( $post );
-					$post->srcset    = wp_get_attachment_image_srcset( $img_id, 'full', wp_get_attachment_metadata( $img_id ) );
-					$post->alt_text  = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
-				}
-
-				$post->link           = get_permalink( $post );
-				$post->date_formatted = get_the_date( '', $post->ID );
-				$posts_array[]        = $post;
+			if ( has_post_thumbnail( $post ) ) {
+				$post_data['image']    = get_the_post_thumbnail_url( $post, 'medium' );
+				$img_id                = get_post_thumbnail_id( $post );
+				$srcset                = wp_get_attachment_image_srcset( $img_id, 'full', wp_get_attachment_metadata( $img_id ) );
+				$post_data['srcset']   = is_string( $srcset ) ? $srcset : 'false';
+				$post_data['alt_text'] = get_post_meta( $img_id, '_wp_attachment_image_alt', true );
 			}
+
+			$posts_array[] = $post_data;
 		}
 
 		return $posts_array;
+	}
+
+	/**
+	 * @param string $layout Covers block layout.
+	 *
+	 * @return int Number of posts to fetch.
+	 */
+	private static function numberposts( string $layout ): int {
+		if ( self::CAROUSEL_LAYOUT === $layout ) {
+			return self::POSTS_LIMIT_CAROUSEL_LAYOUT;
+		}
+
+		return self::POSTS_LIMIT;
 	}
 }

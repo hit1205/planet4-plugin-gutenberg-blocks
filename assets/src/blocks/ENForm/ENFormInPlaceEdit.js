@@ -4,6 +4,7 @@ import { RichText, BlockControls } from '@wordpress/block-editor';
 import { ToolbarGroup } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { useState } from '@wordpress/element';
+import { autop } from '@wordpress/autop';
 
 const { __ } = wp.i18n;
 
@@ -35,9 +36,9 @@ export const ENFormInPlaceEdit = ({attributes, setAttributes}) => {
   const section_style = ((style) => {
     switch (style) {
       case 'side-style':
-        return 'block-header block-wide';
+        return 'block-header alignfull';
       case 'full-width-bg':
-        return 'block-footer block-wide';
+        return 'block-footer alignfull';
       default:
         return '';
     }
@@ -121,7 +122,10 @@ const SideContent = ({attributes, setAttributes}) => {
     content_description,
     content_title_size,
     campaign_logo,
+    campaign_logo_path
   } = attributes;
+
+  const title_size = content_title_size ?? 'h1';
 
   return (
     <>
@@ -129,12 +133,11 @@ const SideContent = ({attributes, setAttributes}) => {
       <ToolbarGroup
         isCollapsed={ true }
         icon="heading"
-        label={content_title_size.toUpperCase()}
+        label={title_size.toUpperCase()}
         controls={
           ['h1', 'h2'].map((size) => {
-            const isActive = content_title_size === size;
             return {
-              isActive,
+              isActive: title_size === size,
               icon: "heading",
               title: size.toUpperCase(),
               onClick: () => { setAttributes({content_title_size: size}) }
@@ -144,28 +147,27 @@ const SideContent = ({attributes, setAttributes}) => {
       />
     </BlockControls>
     <div className="form-caption">
-      {campaign_logo &&
-        <img src={ campaign_logo }
-            alt={ content_title }
+      {campaign_logo && campaign_logo_path &&
+        <img src={ campaign_logo_path }
+            alt={ content_title ?? '' }
             className="campaign-logo" />
       }
       <RichText
-        tagName={content_title_size}
+        tagName={title_size}
         value={content_title}
         onChange={(title) => { setAttributes({content_title: title}) }}
         placeholder={__('Enter title', 'planet4-blocks-backend')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={[]}
         multiline="false"
       />
       <RichText
-        tagName="p"
-        value={content_description}
+        tagName="div"
+        value={autop(content_description ?? '')}
         onChange={(desc) => { setAttributes({content_description: desc}) }}
         placeholder={__('Enter description', 'planet4-blocks-backend')}
-        keepPlaceholderOnFocus={true}
-        allowedFormats={[]}
+        allowedFormats={['core/bold', 'core/italic']}
+        multiline
       />
     </div>
     </>
@@ -174,21 +176,15 @@ const SideContent = ({attributes, setAttributes}) => {
 
 const Signup = ({attributes, setAttributes}) => {
   const {
-    en_form_style,
     title,
     description,
     en_form_id,
-    en_form_fields,
   } = attributes;
 
-  const form_post = useSelect((select) => {
-    return en_form_id
-      ? select('core').getEntityRecord('postType', 'p4en_form', en_form_id)
-      : [];
-  });
-  const fields = en_form_fields.length > 0 ? en_form_fields : (
-    form_post?.p4enform_fields || []
-  );
+  const fields = useSelect((select) => {
+    const enform_post = en_form_id ? select('core').getEntityRecord('postType', 'p4en_form', en_form_id) : {};
+    return enform_post?.p4enform_fields || [];
+  }, [en_form_id]);
 
   return (
     <div className="enform">
@@ -200,23 +196,18 @@ const Signup = ({attributes, setAttributes}) => {
             value={title}
             onChange={(title) => { setAttributes({title}) }}
             placeholder={__('Enter form title', 'planet4-blocks-backend')}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             allowedFormats={[]}
             multiline="false"
           />
-          {en_form_style === 'side-style' &&
-            <div className={'enform-extra-header-placeholder'}></div>
-          }
-
           <RichText
             tagName="div"
             value={description}
             className="form-description"
             onChange={(description) => { setAttributes({description}) }}
             placeholder={__('Enter form description', 'planet4-blocks-backend')}
-            keepPlaceholderOnFocus={true}
-            allowedFormats={[]}
+            allowedFormats={['core/bold', 'core/italic']}
+            multiline
           />
         </div>
 
@@ -274,7 +265,6 @@ const ThankYou = ({attributes, setAttributes}) => {
             value={ thankyou_title }
             onChange={toAttribute('thankyou_title')}
             placeholder={__('Enter title', 'planet4-blocks-backend')}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             allowedFormats={[]}
             multiline="false"
@@ -286,9 +276,8 @@ const ThankYou = ({attributes, setAttributes}) => {
           value={ thankyou_subtitle }
           onChange={toAttribute('thankyou_subtitle')}
           placeholder={__('Enter description', 'planet4-blocks-backend')}
-          keepPlaceholderOnFocus={true}
           allowedFormats={[]}
-          multiline="false"
+          multiline
         />
 
         <div className="sub-section formblock-flex">
@@ -299,7 +288,6 @@ const ThankYou = ({attributes, setAttributes}) => {
               value={ thankyou_social_media_message }
               onChange={toAttribute('thankyou_social_media_message')}
               placeholder={__('Enter social media message', 'planet4-blocks-backend')}
-              keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               allowedFormats={[]}
               multiline="false"
@@ -319,7 +307,6 @@ const ThankYou = ({attributes, setAttributes}) => {
                   value={ thankyou_donate_message }
                   onChange={toAttribute('thankyou_donate_message')}
                   placeholder={__('Enter donate message', 'planet4-blocks-backend')}
-                  keepPlaceholderOnFocus={true}
                   allowedFormats={['core/bold', 'core/italic', 'core/link']}
                   multiline="false"
                 />
@@ -333,7 +320,6 @@ const ThankYou = ({attributes, setAttributes}) => {
                   value={donate_text}
                   onChange={toAttribute('donate_text')}
                   placeholder={__('Donate', 'planet4-blocks-backend')}
-                  keepPlaceholderOnFocus={true}
                   withoutInteractiveFormatting
                   allowedFormats={[]}
                   multiline="false"
@@ -378,7 +364,6 @@ const FormContent = ({attributes, setAttributes, fields}) => {
                 tagName="p"
                 value={text_below_button}
                 placeholder={__('Text below button', 'planet4-blocks-backend')}
-                keepPlaceholderOnFocus={true}
                 allowedFormats={[]}
                 onChange={(text) => {setAttributes({text_below_button: text})}}
               />
@@ -391,7 +376,6 @@ const FormContent = ({attributes, setAttributes, fields}) => {
               tagName="p"
               value={text_below_button}
               placeholder={__('Text below button', 'planet4-blocks-backend')}
-              keepPlaceholderOnFocus={true}
               allowedFormats={[]}
               onChange={(text) => {setAttributes({text_below_button: text})}}
             />

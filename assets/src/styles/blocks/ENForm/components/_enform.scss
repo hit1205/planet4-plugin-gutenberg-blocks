@@ -36,8 +36,6 @@
     --block-enform--caption-heading-- {
       color: white;
     }
-
-    font-family: var(--headings--font-family, var(--header-primary-font)) !important;
   }
 
   h1 {
@@ -45,7 +43,7 @@
     line-height: 1.1;
 
     @include large-and-up {
-      margin-bottom: $space-lg;
+      margin-bottom: $sp-4;
     }
   }
 
@@ -74,7 +72,6 @@
   p {
     --block-enform--caption--paragraph-- {
       color: white;
-      font-family: $roboto;
       font-size: 1rem;
       line-height: 1.37rem;
     }
@@ -90,19 +87,10 @@
   }
 }
 
-.form-description p:first-child --block-enform--caption--paragraph--first-- {
-  font-weight: inherit;
-  font-size: 1rem;
-  text-transform: none;
-  font-family: $roboto;
-  margin-bottom: auto;
-}
-
 .enform {
   margin-top: 36px;
   font-family: $roboto;
   height: inherit;
-  padding: $n20;
   background: $dark-blue;
   width: 100%;
 
@@ -149,7 +137,7 @@
       button, .btn {
         box-sizing: border-box;
         width: 100% !important;
-        margin-top: $space-lg;
+        margin-top: $sp-4;
       }
     }
 
@@ -159,13 +147,13 @@
     }
 
     .enform-legal {
-      margin-top: $space-md;
+      margin-top: $sp-2;
 
       html[dir="rtl"] & {
-        margin-top: $space-xl;
+        margin-top: $sp-6;
 
         @include large-and-up {
-          margin-top: $space-lg;
+          margin-top: $sp-4;
         }
       }
 

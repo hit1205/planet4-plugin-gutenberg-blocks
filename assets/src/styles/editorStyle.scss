@@ -1,26 +1,21 @@
-@import "~bootstrap/scss/bootstrap-reboot";
-@import "~bootstrap/scss/bootstrap-grid";
-@import "~bootstrap/scss/carousel";
-@import "~bootstrap/scss/tooltip";
-@import "~bootstrap/scss/buttons";
-
 @import "master-theme/assets/src/scss/base/variables";
 @import "master-theme/assets/src/scss/base/colors";
 @import "master-theme/assets/src/scss/base/functions";
 @import "master-theme/assets/src/scss/base/mixins";
 @import "master-theme/assets/src/scss/base/fonts";
-@import "master-theme/assets/src/scss/components/buttons";
-@import "master-theme/assets/src/scss/components/share-buttons";
 
 @import "blocks";
 
 @import "blocks/ArticlesEditor";
 @import "blocks/ColumnsEditor";
-@import "blocks/GalleryEditor";
 @import "blocks/SplitTwoColumnsEditor";
 @import "blocks/SubmenuEditor";
 @import "blocks/HappypointEditor";
-@import "blocks/OldENForm/ENFormEditor";
+@import "blocks/ENForm/ENFormEditorStyle";
+@import "blocks/TakeActionBoxout/edit";
+@import "blocks/CookiesEditor";
+@import "blocks/core-overrides/HeadingEditor";
+@import "../variations/stretched-link/edit";
 
 @import "components/LayoutSelector";
 @import "components/EmptyMessage";
@@ -33,3 +28,18 @@
 @import "components/FormField";
 @import "components/HTMLSidebarHelp";
 @import "editorFonts";
+
+.block-edit-mode-warning {
+  padding: $sp-2;
+  margin: 0;
+}
+
+.block-editor-block-list__layout > * {
+  margin-top: $sp-1;
+  margin-bottom: $sp-2;
+
+  @include large-and-up {
+    margin-top: $sp-2;
+    margin-bottom: $sp-4;
+  }
+}

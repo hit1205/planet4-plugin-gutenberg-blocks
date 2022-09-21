@@ -163,7 +163,6 @@ export const SocialMediaEditor = ({
           placeholder={__('Enter title', 'planet4-blocks-backend')}
           value={title}
           onChange={toAttribute('title')}
-          keepPlaceholderOnFocus={true}
           withoutInteractiveFormatting
           multiline='false'
           allowedFormats={[]}
@@ -175,7 +174,6 @@ export const SocialMediaEditor = ({
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         value={description}
         onChange={toAttribute('description')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={['core/bold', 'core/italic']}
       />
@@ -184,7 +182,7 @@ export const SocialMediaEditor = ({
 
   const renderSidebar = () => (
     <InspectorControls>
-      <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+      <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
         <RadioControl
           label={__('Embed type', 'planet4-blocks-backend')}
           options={[

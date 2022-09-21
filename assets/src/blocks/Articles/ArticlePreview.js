@@ -1,6 +1,7 @@
 import { Component } from '@wordpress/element';
 import { unescape } from '../../functions/unescape';
 import { IMAGE_SIZES } from './imageSizes';
+const { __ } = wp.i18n;
 
 export class ArticlePreview extends Component {
   constructor(props) {
@@ -70,7 +71,7 @@ export class ArticlePreview extends Component {
         data-ga-action="Image"
         data-ga-label="n/a">
           <img
-            className="d-flex topicwise-article-image"
+            className="topicwise-article-image"
             src={thumbnail_url}
             srcSet={thumbnail_srcset || null}
             alt={alt_text}
@@ -103,6 +104,7 @@ export class ArticlePreview extends Component {
         post_title,
         post_excerpt,
         date_formatted,
+        reading_time,
       }
     } = this.props;
 
@@ -149,31 +151,40 @@ export class ArticlePreview extends Component {
                   href={link}
                   data-ga-category="Articles Block"
                   data-ga-action="Title"
-                  data-ga-label="n/a">
-                    {post_title}
-                </a>
+                  data-ga-label="n/a"
+                  dangerouslySetInnerHTML={{ __html: post_title }}
+                />
               </h4>
             }
-            <p className="article-list-item-meta">
-              {authorLink}
-
-              {(authorLink && date_formatted) && (
-                <span className="article-list-item-bullet" aria-hidden="true">&#8226;</span>
-              )}
-
-              {date_formatted &&
-              <time className="article-list-item-date" dateTime="">
-                {date_formatted}
-              </time>
-              }
-            </p>
           </header>
 
           {post_excerpt &&
-            <p className="article-list-item-content">
-              {unescape(post_excerpt)}
-            </p>
+            <p className="article-list-item-content" dangerouslySetInnerHTML={{ __html: post_excerpt }} />
           }
+
+          <p className='article-list-item-meta'>
+            {authorLink}
+
+            {(authorLink && date_formatted) && (
+              <span className='article-list-item-bullet' aria-hidden='true'>&#8226;</span>
+            )}
+
+            {date_formatted &&
+            <time className='article-list-item-date' dateTime=''>
+              {date_formatted}
+            </time>
+            }
+
+            {(authorLink || date_formatted) && reading_time &&
+              <span className='article-list-item-bullet' aria-hidden='true'>&#8226;</span>
+            }
+
+            {reading_time &&
+              <span className='article-list-item-readtime'>
+                { __( '%d min read', 'planet4-blocks' ).replace('%d', reading_time) }
+              </span>
+            }
+          </p>
         </div>
       </article>
     );

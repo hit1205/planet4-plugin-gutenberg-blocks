@@ -22,12 +22,7 @@ export class CounterFrontend extends Component {
     if (completed_api && completed_api.startsWith('https://')) {
       window.addEventListener('updateCounter', function () { counter.calculateRemaining(); }, false);
     }
-    // Append the counter inside the En-Form
-    var counterBar = document.querySelector('.counter-style-en-forms-bar');
-    var enFormHeader = document.querySelector('.enform-extra-header-placeholder');
-    if ( counterBar !== null && enFormHeader !== null ) {
-      enFormHeader.append(counterBar);
-    }
+    this.appendENForm();
   }
 
   componentWillUnmount() {
@@ -43,6 +38,18 @@ export class CounterFrontend extends Component {
     const { target, completed, completed_api } = this.props;
     if (target !== prevTarget || completed !== prevCompleted || completed_api !== prevCompletedApi) {
       this.calculateRemaining();
+    }
+    this.appendENForm();
+  }
+
+  appendENForm() {
+    // Append the counter inside the En-Form
+    var counterBar = document.querySelector('.wp-block-planet4-blocks-counter .counter-style-en-forms-bar')?.cloneNode(true);
+    var enFormHeader = document.querySelector('.enform-extra-header-placeholder');
+
+    if ( counterBar && enFormHeader ) {
+      enFormHeader.innerHTML = '';
+      enFormHeader.append(counterBar);
     }
   }
 
@@ -104,22 +111,20 @@ export class CounterFrontend extends Component {
 
     const percent = Math.min(target > 0 ? Math.round(completed / target * 100) : 0, 100);
 
-    let counterClassName = `block container counter-block counter-style-${style} ${className ?? ''}`;
+    let counterClassName = `block counter-block counter-style-${style} ${className ?? ''}`;
     if (isEditing) counterClassName += ` editing`;
 
     return (
       <Fragment>
         <section className={counterClassName}>
-          <div className="container">
-            {title && !isEditing &&
-              <header>
-                <h2 className="page-section-header">{title}</h2>
-              </header>
-            }
-            {description && !isEditing &&
-              <p className="page-section-description" dangerouslySetInnerHTML={{ __html: description }} />
-            }
-          </div>
+          {title && !isEditing &&
+            <header>
+              <h2 className="page-section-header">{title}</h2>
+            </header>
+          }
+          {description && !isEditing &&
+            <p className="page-section-description" dangerouslySetInnerHTML={{ __html: description }} />
+          }
           <div className="content-counter">
             {(style === 'bar' || style === 'en-forms-bar') &&
               <div className="progress-container">

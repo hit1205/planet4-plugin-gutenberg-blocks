@@ -8,7 +8,7 @@ import {
 import { InspectorControls } from '@wordpress/block-editor';
 import withCharacterCounter from '../../components/withCharacterCounter/withCharacterCounter';
 import TagSelector from '../../components/TagSelector/TagSelector';
-import PostSelector from '../../components/PostSelector/PostSelector';
+import { PostSelector } from '../../components/PostSelector/PostSelector';
 import PostTypeSelector from '../../components/PostTypeSelector/PostTypeSelector';
 import { URLInput } from "../../components/URLInput/URLInput";
 import { ArticlesList } from "./ArticlesList";
@@ -25,7 +25,7 @@ const renderEdit = (attributes, toAttribute) => {
   return (
     <Fragment>
       <InspectorControls>
-        <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+        <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
           <TextControl
             label={__('Button Text', 'planet4-blocks-backend')}
             placeholder={__('Override button text', 'planet4-blocks-backend')}
@@ -83,12 +83,13 @@ const renderEdit = (attributes, toAttribute) => {
               <hr />
               <label>{__('Manual override', 'planet4-blocks-backend')}</label>
               <PostSelector
-                value={attributes.posts}
-                onChange={toAttribute('posts')}
                 label={__('CAUTION: Adding articles individually will override the automatic functionality of this block. For good user experience, please include at least three articles so that spacing and alignment of the design remains intact.', 'planet4-blocks-backend')}
+                selected={attributes.posts || []}
+                onChange={toAttribute('posts')}
+                postType='post'
+                placeholder={__('Select articles', 'planet4-blocks-backend')}
                 maxLength={10}
                 maxSuggestions={20}
-                postType='post'
               />
             </div>
           }
@@ -112,7 +113,6 @@ const renderView = ({ attributes, postType, posts, totalPosts }, toAttribute) =>
             placeholder={__('Enter title', 'planet4-blocks-backend')}
             value={attributes.article_heading}
             onChange={toAttribute('article_heading')}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             multiline="false"
             allowedFormats={[]}
@@ -125,7 +125,6 @@ const renderView = ({ attributes, postType, posts, totalPosts }, toAttribute) =>
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         value={attributes.articles_description}
         onChange={toAttribute('articles_description')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={['core/bold', 'core/italic']}
       />
@@ -138,7 +137,6 @@ const renderView = ({ attributes, postType, posts, totalPosts }, toAttribute) =>
               placeholder={__('Enter text', 'planet4-blocks-backend')}
               value={attributes.read_more_text}
               onChange={toAttribute('read_more_text')}
-              keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               multiline="false"
               allowedFormats={[]}

@@ -55,48 +55,53 @@ class Articles extends Base_Block {
 				},
 				'attributes'      => [
 					'article_heading'      => [
-						'type' => 'string',
-					],
-					'article_count'        => [
-						'type'    => 'integer',
-						'default' => 3,
-					],
-					'read_more_text'       => [
-						'type' => 'string',
-					],
-					'read_more_link'       => [
 						'type'    => 'string',
-						'default' => '',
+						'default' => __( 'Related Articles', 'planet4-blocks' ),
 					],
 					'articles_description' => [
 						'type'    => 'string',
 						'default' => '',
 					],
+					'article_count'        => [
+						'type'    => 'integer',
+						'default' => 3,
+					],
 					'tags'                 => [
-						'type'  => 'array',
-						'items' => [
+						'type'    => 'array',
+						'default' => [],
+						'items'   => [
 							'type' => 'integer', // Array definitions require an item type.
 						],
 					],
-					'post_types'           => [
-						'type'  => 'array',
-						'items' => [
+					'posts'                => [
+						'type'    => 'array',
+						'default' => [],
+						'items'   => [
 							'type' => 'integer',
 						],
 					],
-					'ignore_categories'    => [
-						'type'    => 'boolean',
-						'default' => false,
+					'post_types'           => [
+						'type'    => 'array',
+						'default' => [],
+						'items'   => [
+							'type' => 'integer',
+						],
+					],
+					'read_more_text'       => [
+						'type'    => 'string',
+						'default' => __( 'Load more', 'planet4-blocks' ),
+					],
+					'read_more_link'       => [
+						'type'    => 'string',
+						'default' => '',
 					],
 					'button_link_new_tab'  => [
 						'type'    => 'boolean',
 						'default' => false,
 					],
-					'posts'                => [
-						'type'  => 'array',
-						'items' => [
-							'type' => 'integer',
-						],
+					'ignore_categories'    => [
+						'type'    => 'boolean',
+						'default' => false,
 					],
 				],
 			]
@@ -130,12 +135,12 @@ class Articles extends Base_Block {
 		// 4) issue page - Get posts based on page's tags.
 		if ( empty( $fields['posts'] ) && empty( $fields['post_types'] ) && ! empty( $fields['tags'] ) && is_tag() ) {
 			$args = self::filter_posts_for_tag_page( $fields );
+		} elseif ( ! empty( $fields['posts'] ) ) {
+			$args = self::filter_posts_by_ids( $fields );
 		} elseif ( ! empty( $fields['post_types'] ) ||
 				! empty( $fields['tags'] ) ||
 				! empty( $fields['exclude_post_id'] ) ) {
 			$args = self::filter_posts_by_page_types_or_tags( $fields );
-		} elseif ( ! empty( $fields['posts'] ) ) {
-			$args = self::filter_posts_by_ids( $fields );
 		} else {
 			$args = self::filter_posts_by_pages_tags( $fields );
 		}
@@ -232,6 +237,7 @@ class Articles extends Base_Block {
 				$recent['page_type_link'] = get_term_link( $page_type_id );
 				$recent['link']           = get_permalink( $recent['ID'] );
 				$recent['date_formatted'] = get_the_date( '', $recent['ID'] );
+				$recent['reading_time']   = ( new \P4\MasterTheme\Post( $recent['ID'] ) )->reading_time();
 
 				$recent_posts[] = $recent;
 			}

@@ -51,7 +51,7 @@ const renderEdit = (attributes, setAttributes) => {
 
   return (
     <InspectorControls>
-      <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+      <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
         {attributes.levels.map((level, i) => (
           <SubmenuLevel
             {...level}
@@ -107,7 +107,6 @@ const renderView = (attributes, setAttributes, className) => {
         placeholder={__('Enter title', 'planet4-blocks-backend')}
         value={title}
         onChange={title => setAttributes({ title })}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         multiline="false"
         allowedFormats={[]}

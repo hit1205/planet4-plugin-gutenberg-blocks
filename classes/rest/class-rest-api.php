@@ -41,40 +41,19 @@ class Rest_Api {
 		 */
 		register_rest_route(
 			self::REST_NAMESPACE,
-			'/all-published-posts',
+			'/published',
 			[
 				[
-					'permission_callback' => static function () {
-						return current_user_can( 'edit_pages' ) || current_user_can( 'edit_campaigns' );
-					},
-					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => static function () {
-						global $wpdb;
-
-						if ( is_plugin_active( 'sitepress-multilingual-cms/sitepress.php' ) ) {
-							// This is public data, no nonce needed.
-							// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							if ( ! isset( $_GET['post_language'] ) ) {
-								return new \WP_REST_Response(
-									'WPML is active so you need to query posts with the `post_language` query parameter.',
-									400
-								);
-							}
-							// This is public data, no nonce needed.
-							// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-							$query = self::get_wpml_posts_query( $_GET['post_language'] );
-						} else {
-							$query = "SELECT id, post_title FROM wp_posts WHERE post_status = 'publish' AND post_type = 'post' ORDER BY post_date DESC";
-						}
-						// The query is prepared, just not in this line.
-						// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-						$result = $wpdb->get_results( $query );
-
-						return rest_ensure_response( $result );
+					'permission_callback' => [ Published::class, 'permission' ],
+					'methods'             => Published::methods(),
+					'callback'            => static function ( $request ) {
+						$api = new Published( $request );
+						return $api->response();
 					},
 				],
 			]
 		);
+
 		/**
 		 * Save meta to the preview of the current user.
 		 */
@@ -374,27 +353,108 @@ class Rest_Api {
 				],
 			]
 		);
+
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/enform/(?P<en_page_id>\d+)',
+			[
+				[
+					'methods'             => WP_REST_Server::CREATABLE,
+					'callback'            => static function ( WP_REST_Request $request ) {
+						return self::send_enform( $request );
+					},
+					'permission_callback' => static function () {
+						return true;
+					},
+				],
+			]
+		);
 	}
 
 	/**
-	 * Create a query for all posts with a certain language code.
+	 * Send form to EN instance.
 	 *
-	 * @param string $language_code Return posts with this language code.
-	 * @return string The prepared query.
+	 * @param WP_REST_Request $request Request.
 	 */
-	private static function get_wpml_posts_query( string $language_code ): string {
-		global $wpdb;
+	private static function send_enform( WP_REST_Request $request ) {
+		$form       = $request->get_json_params();
+		$token      = ENForm::get_session_token();
+		$en_page_id = (int) $request['en_page_id'] ?? null;
+		if ( ! $en_page_id ) {
+			self::log_message( 'Invalid EN page ID', [ 'page_id' => $en_page_id ] );
+			return new WP_Error(
+				'no_en_page_id',
+				'Invalid EN page ID',
+				[ 'status' => 404 ]
+			);
+		}
 
-		return $wpdb->prepare(
-			"SELECT p.id,p.post_title
-				FROM wp_posts p
-         		JOIN wp_icl_translations t
-              		ON p.ID = t.element_id AND t.element_type = 'post_post'
-				WHERE p.post_type = 'post'
-  					AND p.post_status = 'publish'
-  					AND t.language_code = %s
-				ORDER BY p.post_date DESC; ",
-			$language_code
+		$form     = apply_filters( 'planet4_enform_data', $form, $en_page_id );
+		$request  = [
+			'url'  => 'https://e-activist.com/ens/service/page/' . $en_page_id . '/process',
+			'args' => [
+				'headers' => [
+					'content-type'   => 'application/json',
+					'ens-auth-token' => $token,
+				],
+				'body'    => wp_json_encode( $form ),
+			],
+		];
+		$response = wp_remote_post( $request['url'], $request['args'] );
+
+		if ( is_wp_error( $response ) ) {
+			self::log_message(
+				'Error submitting EN form',
+				[
+					'en_api_request' => $request,
+					'wp_error'       => $response->get_all_error_data(),
+				]
+			);
+
+			return $response;
+		}
+
+		$response_code = $response['response']['code'] ?? 0;
+		if ( 200 !== $response_code ) {
+			self::log_message(
+				'Error submitting EN form',
+				[
+					'en_api_request'  => $request,
+					'en_api_response' => $response ?? [],
+				]
+			);
+
+			return new WP_Error(
+				'submit_error',
+				'Error submitting EN form',
+				[
+					'status'   => $response['response']['code'],
+					'response' => $response['response'],
+				]
+			);
+		}
+
+		return rest_ensure_response( [] );
+	}
+
+	/**
+	 * Log API response to Sentry.
+	 *
+	 * @param string $message Message.
+	 * @param array  $data    Data to log.
+	 */
+	private static function log_message( string $message, array $data = [] ): void {
+		if ( ! function_exists( '\\Sentry\\withScope' ) ) {
+			return;
+		}
+
+		\Sentry\withScope(
+			function ( \Sentry\State\Scope $scope ) use ( $message, $data ): void {
+				foreach ( $data as $key => $val ) {
+					$scope->setContext( $key, $val );
+				}
+				\Sentry\captureMessage( $message );
+			}
 		);
 	}
 }

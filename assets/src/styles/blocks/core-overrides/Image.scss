@@ -1,17 +1,42 @@
+@mixin rounded-image-size($size) {
+  figure,
+  img {
+    border-radius: 50%;
+    height: $size;
+    width: $size;
+  }
+
+  img {
+    object-fit: cover;
+  }
+}
+
 .wp-block-image {
   position: relative;
   width: auto;
   max-width: 100%;
-  margin-top: $space-xs;
-  margin-bottom: $space-md;
+  margin-top: $sp-1;
+  margin-bottom: $sp-2;
 
-  &:not(.force-no-lightbox) {
+  &.is-style-rounded-180 {
+    @include rounded-image-size(180px);
+  }
+
+  &.is-style-rounded-90 {
+    @include rounded-image-size(90px);
+  }
+
+  &:not(.force-no-lightbox) img {
     cursor: pointer;
   }
 
+  &.force-no-caption figcaption {
+    display: none !important;
+  }
+
   @include large-and-up {
-    margin-top: $space-md;
-    margin-bottom: $space-lg;
+    margin-top: $sp-2;
+    margin-bottom: $sp-4;
   }
 
   figure {
@@ -19,12 +44,12 @@
   }
 
   .alignleft {
-    margin: 0 $n10 $n10 0;
+    margin: 0 $sp-1 $sp-1 0;
     padding-top: 6px;
   }
 
   .alignright {
-    margin: 0 0 $n10 $n10;
+    margin: 0 0 $sp-1 $sp-1;
     padding-top: 6px;
   }
 
@@ -59,8 +84,4 @@
   &.caption-alignment-right figcaption {
     text-align: right;
   }
-}
-
-figure.wp-block-image {
-  display: inline-block;
 }

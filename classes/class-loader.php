@@ -9,9 +9,12 @@
 namespace P4GBKS;
 
 use P4\MasterTheme\Features;
+use P4\MasterTheme\Features\Dev\ThemeEditor;
+use P4\MasterTheme\Features\EngagingNetworks;
 use P4\MasterTheme\MigrationLog;
 use P4\MasterTheme\Migrations\M001EnableEnFormFeature;
 use P4GBKS\Controllers;
+use P4GBKS\Patterns\Block_Pattern;
 use P4GBKS\Views\View;
 use WP_CLI;
 use P4GBKS\Command\Controller;
@@ -67,7 +70,6 @@ final class Loader {
 		new Blocks\Columns();
 		new Blocks\Cookies();
 		new Blocks\Counter();
-		new Blocks\OldCovers();
 		new Blocks\Covers();
 		new Blocks\Gallery();
 		new Blocks\Happypoint();
@@ -80,9 +82,50 @@ final class Loader {
 		new Blocks\TakeActionBoxout();
 		new Blocks\Timeline();
 		new Blocks\SocialMediaCards();
-		new Blocks\OldENForm();
 		new Blocks\ENForm();
 		new Blocks\GuestBook();
+		new Blocks\HubspotForm();
+		new Blocks\ActionPageDummy();
+
+		/**
+		 * Create Planet 4 block patterns categories.
+		*/
+		if ( ! function_exists( 'register_block_pattern_category' ) ) {
+			return;
+		}
+
+		register_block_pattern_category(
+			'planet4',
+			[ 'label' => 'Planet 4' ],
+		);
+		register_block_pattern_category(
+			'page-headers',
+			[ 'label' => 'Page Headers' ],
+		);
+
+		register_block_pattern_category(
+			'layouts',
+			[ 'label' => 'Layouts' ],
+		);
+
+		// Load block patterns.
+		Block_Pattern::register_all();
+
+		// Load parallax library for Media & Text block.
+		add_action(
+			'wp_enqueue_scripts',
+			static function () {
+				if ( has_block( 'core/media-text' ) ) {
+					wp_enqueue_script(
+						'rellax',
+						'https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js',
+						[],
+						'1.12.1',
+						true
+					);
+				}
+			}
+		);
 	}
 
 	/**
@@ -164,11 +207,14 @@ final class Loader {
 		// Setup image sizes.
 		add_action( 'admin_init', [ $this, 'setup_image_sizes' ] );
 
-		// Set color palette.
-		add_action( 'admin_init', [ $this, 'set_color_palette' ] );
-
+		global $wp_version;
+		$category_filter = version_compare( $wp_version, '5.8', '>=' ) ? 'block_categories_all' : 'block_categories';
 		// Register a block category.
-		add_filter( 'block_categories', [ $this, 'register_block_category' ], 10, 2 );
+		add_filter( $category_filter, [ $this, 'register_block_category' ], 10, 2 );
+
+		// Reset block list cache on post modification.
+		add_action( 'save_post', [ Blocks\BlockList::class, 'cache_delete' ], 10, 1 );
+
 		// Provide hook for other plugins.
 		do_action( 'p4gbks_plugin_loaded' );
 	}
@@ -333,7 +379,7 @@ final class Loader {
 		$option_values = get_option( 'planet4_options' );
 
 		$en_active = ! MigrationLog::from_wp_options()->already_ran( M001EnableEnFormFeature::get_id() )
-					|| Features::is_active( Features::ENGAGING_NETWORKS );
+					|| Features::is_active( 'feature_engaging_networks' );
 
 		$reflection_vars = [
 			'home'            => P4GBKS_PLUGIN_URL . '/public/',
@@ -353,10 +399,12 @@ final class Loader {
 
 		// Variables reflected from PHP to JS.
 		$reflection_vars = [
-			'dateFormat'                => get_option( 'date_format' ),
-			'siteUrl'                   => site_url(),
-			'themeUrl'                  => get_template_directory_uri(),
-			'enable_analytical_cookies' => $option_values['enable_analytical_cookies'] ?? '',
+			'dateFormat'                     => get_option( 'date_format' ),
+			'siteUrl'                        => site_url(),
+			'themeUrl'                       => get_template_directory_uri(),
+			'enable_analytical_cookies'      => $option_values['enable_analytical_cookies'] ?? '',
+			'take_action_covers_button_text' => $option_values['take_action_covers_button_text'] ?? '',
+			'cookies_default_copy'           => self::get_cookies_default_copy(),
 		];
 		wp_localize_script( 'planet4-blocks-editor-script', 'p4bk_vars', $reflection_vars );
 
@@ -399,8 +447,6 @@ final class Loader {
 			true
 		);
 
-		self::enqueue_local_script( 'post_action', 'public/js/post_action.js', [ 'jquery' ] );
-
 		// Variables reflected from PHP to JS.
 		$option_values   = get_option( 'planet4_options' );
 		$reflection_vars = [
@@ -409,6 +455,7 @@ final class Loader {
 			'themeUrl'                   => get_template_directory_uri(),
 			'enable_analytical_cookies'  => $option_values['enable_analytical_cookies'] ?? '',
 			'enable_google_consent_mode' => $option_values['enable_google_consent_mode'] ?? '',
+			'cookies_default_copy'       => self::get_cookies_default_copy(),
 		];
 		wp_localize_script( 'planet4-blocks-script', 'p4bk_vars', $reflection_vars );
 
@@ -436,22 +483,33 @@ final class Loader {
 	}
 
 	/**
+	 * Get the cookies default copy from the settings (Planet 4 > Cookies)
+	 *
+	 * @return array The various cookies text fields.
+	 */
+	private static function get_cookies_default_copy(): array {
+		$option_values = get_option( 'planet4_options' );
+
+		$cookies_default_copy = [
+			'necessary_cookies_name'         => $option_values['necessary_cookies_name'] ?? '',
+			'necessary_cookies_description'  => $option_values['necessary_cookies_description'] ?? '',
+			'analytical_cookies_name'        => $option_values['analytical_cookies_name'] ?? '',
+			'analytical_cookies_description' => $option_values['analytical_cookies_description'] ?? '',
+			'all_cookies_name'               => $option_values['all_cookies_name'] ?? '',
+			'all_cookies_description'        => $option_values['all_cookies_description'] ?? '',
+		];
+
+		return $cookies_default_copy;
+	}
+
+	/**
 	 * Check whether we can include the theme editor.
 	 *
 	 * @return bool Whether the theme editor will be included.
 	 */
 	private static function can_include_theme_editor(): bool {
-		if ( ! Features::is_active( Features::THEME_EDITOR ) ) {
-			return false;
-		}
 
-		if ( is_user_logged_in() ) {
-			return true;
-		}
-
-		return defined( 'ALLOW_EXPERIMENTAL_FEATURES' )
-			&& ALLOW_EXPERIMENTAL_FEATURES
-			&& Features::is_active( Features::THEME_EDITOR_NON_LOGGED_IN );
+		return Features::is_active( 'theme_editor' ) && is_user_logged_in();
 	}
 
 	/**
@@ -517,95 +575,16 @@ DEFERREDCSS;
 		$our_categories = [
 			[
 				'slug'  => 'planet4-blocks',
-				'title' => __( 'Planet 4 Blocks', 'planet4-blocks' ),
+				'title' => 'Planet 4 Blocks',
 			],
 
 			[
 				'slug'  => 'planet4-blocks-beta',
-				'title' => __( 'Planet 4 Blocks - BETA', 'planet4-blocks' ),
+				'title' => 'Planet 4 Blocks - BETA',
 			],
 		];
 
 		return array_merge( $our_categories, $core_categories );
-	}
-
-
-	/**
-	 * Registers a new color palette for all native blocks
-	 */
-	public function set_color_palette() {
-		add_theme_support(
-			'editor-color-palette',
-			[
-				[
-					'name'  => __( 'Grey 80%', 'planet4-blocks-backend' ),
-					'slug'  => 'grey-80',
-					'color' => '#020202',
-				],
-				[
-					'name'  => __( 'Grey 60%', 'planet4-blocks-backend' ),
-					'slug'  => 'grey-60',
-					'color' => '#666666',
-				],
-				[
-					'name'  => __( 'Grey 40%', 'planet4-blocks-backend' ),
-					'slug'  => 'grey-40',
-					'color' => '#999999',
-				],
-				[
-					'name'  => __( 'Grey 20%', 'planet4-blocks-backend' ),
-					'slug'  => 'grey-20',
-					'color' => '#cccccc',
-				],
-				[
-					'name'  => __( 'Grey 10%', 'planet4-blocks-backend' ),
-					'slug'  => 'grey-10',
-					'color' => '#e5e5e5',
-				],
-				[
-					'name'  => __( 'Grey', 'planet4-blocks-backend' ),
-					'slug'  => 'grey',
-					'color' => '#333333',
-				],
-				[
-					'name'  => __( 'GP Green', 'planet4-blocks-backend' ),
-					'slug'  => 'gp-green',
-					'color' => '#66cc00',
-				],
-				[
-					'name'  => __( 'X Dark Blue', 'planet4-blocks-backend' ),
-					'slug'  => 'x-dark-blue',
-					'color' => '#042233',
-				],
-				[
-					'name'  => __( 'Dark Blue', 'planet4-blocks-backend' ),
-					'slug'  => 'dark-blue',
-					'color' => '#074365',
-				],
-				[
-					'name'  => __( 'Blue', 'planet4-blocks-backend' ),
-					'slug'  => 'blue',
-					'color' => '#2077bf',
-				],
-				[
-					'name'  => __( 'Orange Hover', 'planet4-blocks-backend' ),
-					'slug'  => 'orange-hover',
-					'color' => '#ee562d',
-				],
-				[
-					'name'  => __( 'Yellow', 'planet4-blocks-backend' ),
-					'slug'  => 'yellow',
-					'color' => '#ffd204',
-				],
-			]
-		);
-
-		// Disable custom color option.
-		add_theme_support( 'disable-custom-colors' );
-
-		// Disable gradient presets & custom gradients.
-		add_theme_support( 'editor-gradient-presets', [] );
-		add_theme_support( 'disable-custom-gradients' );
 	}
 
 	/**
@@ -663,7 +642,7 @@ DEFERREDCSS;
 			$pages[]           = $main_settings['p4en_private_api'];
 			$ens_private_token = $main_settings['p4en_private_api'];
 			$ens_api           = new Controllers\Ensapi_Controller( $ens_private_token );
-			$pages             = $ens_api->get_pages_by_types_status( Blocks\OldENForm::ENFORM_PAGE_TYPES, 'live' );
+			$pages             = $ens_api->get_pages_by_types_status( Blocks\ENForm::ENFORM_PAGE_TYPES, 'live' );
 			uasort(
 				$pages,
 				function ( $a, $b ) {

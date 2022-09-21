@@ -41,16 +41,6 @@ export const blockEditorValidation = () => {
 
     const postType = wp.data.select('core/editor').getCurrentPostType();
     let currentlyValid = (0 === invalidBlocks.length);
-
-    if ('campaign' === postType) {
-      const meta = wp.data.select('core/editor').getEditedPostAttribute('meta');
-      const metaValid = !!meta['p4_campaign_name'] && 'not set' !== meta['p4_campaign_name'];
-      currentlyValid = currentlyValid && metaValid;
-      if (!metaValid) {
-        currentMessages.push(__('Please check "Analytics & Tracking" section for required fields.', 'planet4-master-theme-backend'));
-        currentMessages.push('Global Project is a required field');
-      }
-    }
     messages = currentMessages;
 
     if (canPublish === currentlyValid) {
@@ -102,11 +92,11 @@ const PrePublishCheckList = () => {
   useSelect(select=>[select('core/editor').getEditedPostAttribute('meta'), select('core/block-editor').getBlocks()]);
   return (
     <PluginPrePublishPanel
-      title={ __('Publish Checklist', 'planet4-master-theme-backend') }
+      title={ __('Publish Checklist', 'planet4-blocks-backend') }
       initialOpen="true"
       className={ !canPublish ? 'p4-plugin-pre-publish-panel-error' : '' }
       icon="none">
-      { !!canPublish && <p>{ __('All good.', 'planet4-master-theme-backend') }</p> }
+      { !!canPublish && <p>{ __('All good.', 'planet4-blocks-backend') }</p> }
       { !canPublish && <ul>
         { messages.map(msg =>
           <li key={ msg }><p>{ msg }</p></li>

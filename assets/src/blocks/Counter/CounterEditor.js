@@ -10,7 +10,7 @@ import { URLInput } from "../../components/URLInput/URLInput";
 
 import { CounterFrontend } from './CounterFrontend';
 
-const { RichText } = wp.editor;
+const { RichText } = wp.blockEditor;
 const { __ } = wp.i18n;
 
 export class CounterEditor extends Component {
@@ -33,7 +33,7 @@ export class CounterEditor extends Component {
     return (
       <Fragment>
         <InspectorControls>
-          <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+          <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
             <div>
               <TextControl
                 label={__('Completed', 'planet4-blocks-backend')}
@@ -94,7 +94,6 @@ export class CounterEditor extends Component {
             placeholder={__('Enter title', 'planet4-blocks-backend')}
             value={attributes.title}
             onChange={this.toAttribute('title')}
-            keepPlaceholderOnFocus={true}
             withoutInteractiveFormatting
             multiline="false"
             allowedFormats={[]}
@@ -106,7 +105,6 @@ export class CounterEditor extends Component {
           placeholder={__('Enter description', 'planet4-blocks-backend')}
           value={attributes.description}
           onChange={this.toAttribute('description')}
-          keepPlaceholderOnFocus={true}
           withoutInteractiveFormatting
           allowedFormats={['core/bold', 'core/italic']}
         />

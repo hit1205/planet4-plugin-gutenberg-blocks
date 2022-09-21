@@ -11,6 +11,7 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
   const {
     en_page_id,
     en_form_id,
+    en_form_style,
     enform_goal,
     background,
     background_image_src,
@@ -18,6 +19,7 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
     background_image_sizes,
     background_image_focus,
     donate_button_checkbox,
+    custom_donate_url,
     thankyou_url,
     campaign_logo,
   } = attributes;
@@ -26,6 +28,7 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
   const en_forms = getFormList();
   const is_campaign = getCurrentPostType() === "campaign";
 
+  const style_has_image = en_form_style === 'full-width-bg' || en_form_style === 'side-style';
   const focus_bg_image_obj = convertFocalStringToObj(background_image_focus || null);
   const focal_picker_dimensions = {width: 400, height: 100};
 
@@ -34,7 +37,6 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
   }
 
   const onBackgroundChange = (image) => {
-    console.log(background, image);
     setAttributes({
       background: image.id,
       background_image_src: image.url,
@@ -73,7 +75,7 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
               ...page_list
             ]}
             disabled={page_list.length <= 0}
-            onChange={toAttribute('en_page_id')}
+            onChange={(id) => {setAttributes({en_page_id: parseInt(id)})}}
             required={true}
           />
 
@@ -103,31 +105,33 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
               : __( 'Create an EN Form', 'planet4-engagingnetworks-backend' )}
           />
 
-          <BaseControl
-            id="enform-bg-img-control"
-            label={__('Select background image', 'planet4-blocks-backend')}
-            help={__('(Optional)', 'planet4-blocks-backend')}
-          >
-            <ImageOrButton
-              title={__('Select background image', 'planet4-blocks-backend')}
-              onSelectImage={(image) => {onBackgroundChange(image)}}
-              imageId={background}
-              imageUrl={background_image_src}
-              buttonLabel={__('+ Select background image', 'planet4-blocks-backend')}
-              disabled={false}
-            />
-            {background_image_src &&
-              <div>
-                {__('Select focal point for background image', 'planet4-blocks-backend')}
-                <FocalPointPicker
-                  url={background_image_src}
-                  dimensions={focal_picker_dimensions}
-                  value={focus_bg_image_obj}
-                  onChange={(focus) => {onFocalChange('background_image_focus', focus)}}
-                />
-              </div>
-            }
-          </BaseControl>
+          {style_has_image &&
+            <BaseControl
+              id="enform-bg-img-control"
+              label={__('Select background image', 'planet4-blocks-backend')}
+              help={__('(Optional)', 'planet4-blocks-backend')}
+            >
+              <ImageOrButton
+                title={__('Select background image', 'planet4-blocks-backend')}
+                onSelectImage={(image) => {onBackgroundChange(image)}}
+                imageId={background}
+                imageUrl={background_image_src}
+                buttonLabel={__('+ Select background image', 'planet4-blocks-backend')}
+                disabled={false}
+              />
+              {background_image_src &&
+                <div>
+                  {__('Select focal point for background image', 'planet4-blocks-backend')}
+                  <FocalPointPicker
+                    url={background_image_src}
+                    dimensions={focal_picker_dimensions}
+                    value={focus_bg_image_obj}
+                    onChange={(focus) => {onFocalChange('background_image_focus', focus)}}
+                  />
+                </div>
+              }
+            </BaseControl>
+          }
         </div>
       </PanelBody>
 
@@ -139,8 +143,18 @@ export const ENFormSettings = ({attributes, setAttributes}) => {
           onChange={toAttribute('donate_button_checkbox')}
         />
 
+        {! donate_button_checkbox &&
+          <URLInput
+            label={ __( 'Donate button URL', 'planet4-engagingnetworks-backend' ) }
+            placeholder={ __( 'Enter "Donate" button url', 'planet4-engagingnetworks-backend' ) }
+            value={custom_donate_url}
+            onChange={toAttribute('custom_donate_url')}
+            help={ __('If left empty, your Donate button link from "Planet4 > Donate button" will be used', 'planet4-engagingnetworks-backend') }
+          />
+        }
+
         <URLInput
-          label={ __( 'Page URL', 'planet4-engagingnetworks-backend' ) }
+          label={ __( 'Thank you page URL', 'planet4-engagingnetworks-backend' ) }
           placeholder={ __( 'Enter "Thank you page" url', 'planet4-engagingnetworks-backend' ) }
           value={thankyou_url}
           onChange={toAttribute('thankyou_url')}

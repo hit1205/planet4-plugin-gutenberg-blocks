@@ -13,7 +13,7 @@ import { MediaPlaceholder, MediaUploadCheck } from "@wordpress/blockEditor";
 const { RichText } = wp.blockEditor;
 const { __ } = wp.i18n;
 
-const renderEdit = (attributes, setAttributes) => {
+const renderEdit = (attributes, setAttributes, isSelected) => {
   const { image_data, className, gallery_block_style } = attributes;
 
   const layout = getGalleryLayout(className, gallery_block_style);
@@ -62,23 +62,25 @@ const renderEdit = (attributes, setAttributes) => {
 
   return (
     <Fragment>
-      <MediaUploadCheck>
-        <MediaPlaceholder
-          addToGallery={hasImages}
-          labels={{
-            title: __('Select Gallery Images', 'planet4-blocks-backend'),
-            instructions: __('Upload an image or select from the media library.', 'planet4-blocks-backend'),
-          }}
-          onSelect={onSelectImage}
-          accept="image/*"
-          allowedTypes={["image"]}
-          multiple
-          value={hasImages ? image_data : undefined}
-        />
-      </MediaUploadCheck>
+      {(isSelected || !hasImages) &&
+        <MediaUploadCheck>
+          <MediaPlaceholder
+            addToGallery={hasImages}
+            labels={{
+              title: __('Select Gallery Images', 'planet4-blocks-backend'),
+              instructions: __('Upload an JPEG image or select one from the media library.', 'planet4-blocks-backend'),
+            }}
+            onSelect={onSelectImage}
+            allowedTypes={["image"]}
+            accept={['image/jpg','image/jpeg']}
+            multiple
+            value={hasImages ? image_data : undefined}
+          />
+        </MediaUploadCheck>
+      }
       {hasImages && (
         <InspectorControls>
-          <PanelBody title={__('Setting', 'planet4-blocks-backend')}>
+          <PanelBody title={__('Settings', 'planet4-blocks-backend')}>
             <div className="wp-block-master-theme-gallery__FocalPointPicker">
               <p>{__('Select gallery image focal point', 'planet4-blocks-backend')}</p>
               <ul>
@@ -131,7 +133,6 @@ const renderView = (attributes, setAttributes) => {
           placeholder={__('Enter title', 'planet4-blocks-backend')}
           value={gallery_block_title}
           onChange={toAttribute('gallery_block_title')}
-          keepPlaceholderOnFocus={true}
           withoutInteractiveFormatting
           multiline="false"
           allowedFormats={[]}
@@ -143,11 +144,10 @@ const renderView = (attributes, setAttributes) => {
         placeholder={__('Enter description', 'planet4-blocks-backend')}
         value={gallery_block_description}
         onChange={toAttribute('gallery_block_description')}
-        keepPlaceholderOnFocus={true}
         withoutInteractiveFormatting
         allowedFormats={['core/bold', 'core/italic']}
       />
-      {layout === 'slider' && <GalleryCarousel images={images || []} />}
+      {layout === 'slider' && <GalleryCarousel images={images || []} isEditing />}
       {layout === 'three-columns' && <GalleryThreeColumns images={images || []} postType={postType} />}
       {layout === 'grid' && <GalleryGrid images={images || []} />}
     </section>
@@ -201,7 +201,7 @@ export const GalleryEditor = ({ isSelected, attributes, setAttributes }) => {
 
   return (
     <Fragment>
-      {isSelected && renderEdit(attributes, setAttributes)}
+      {renderEdit(attributes, setAttributes, isSelected)}
       {renderView(attributes, setAttributes)}
     </Fragment>
   );

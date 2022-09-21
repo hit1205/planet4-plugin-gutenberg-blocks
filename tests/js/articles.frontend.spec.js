@@ -48,7 +48,7 @@ describe( 'Articles block frontend', () => {
 
     await selectBlockByName( 'planet4-blocks/articles' );
 
-    await openSidebarPanelWithTitle( 'Setting' );
+    await openSidebarPanelWithTitle( 'Settings' );
 
     // Manually add post(without thumbnail img) in articles blocks.
     await typeInDropdownWithLabel( 'Manual override', 'Test Articles with no thumbnail' );
@@ -69,7 +69,7 @@ describe( 'Articles block frontend', () => {
 
     await page.waitForNavigation();
 
-    await page.waitForSelector( '.page-template' );
+    await page.waitForSelector( '.page-content' );
 
     // The "Articles Block" should appear on page.
     await expect( page ).toMatchElement( '.block.articles-block' );
@@ -103,7 +103,7 @@ describe( 'Articles block frontend', () => {
 
     await page.waitForNavigation();
 
-    await page.waitForSelector( '.page-template' );
+    await page.waitForSelector( '.page-content' );
 
     // Wait for articles block to be loaded.
     await new Promise((r) => setTimeout(r, 400));

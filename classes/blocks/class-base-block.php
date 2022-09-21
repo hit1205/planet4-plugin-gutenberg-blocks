@@ -102,8 +102,8 @@ abstract class Base_Block {
 	 */
 	public static function enqueue_editor_assets() {
 		static::enqueue_editor_script();
-		static::enqueue_editor_style();
 		static::enqueue_frontend_style();
+		static::enqueue_editor_style();
 	}
 
 	/**
@@ -111,17 +111,14 @@ abstract class Base_Block {
 	 */
 	public static function enqueue_frontend_assets() {
 		$full_name   = static::get_full_block_name();
-		$beta_blocks = [
-			'planet4-blocks/covers',
-			'planet4-blocks/enform',
-		];
+		$beta_blocks = [];
 
 		$to_look_for = $full_name;
 		if ( in_array( $full_name, $beta_blocks, true ) ) {
 			$to_look_for .= '-beta';
 		}
 
-		if ( ! has_block( $to_look_for ) ) {
+		if ( ! is_preview() && ! BlockList::has_block( $to_look_for ) ) {
 			return;
 		}
 
@@ -159,7 +156,8 @@ abstract class Base_Block {
 		wp_enqueue_style(
 			static::get_full_block_name() . '-editor-style',
 			static::get_url_path() . 'EditorStyle.min.css',
-			[],
+			// Ensure loaded both after main stylesheet and block's front end styles.
+			[ 'planet4-editor-style', static::get_full_block_name() . '-style' ],
 			\P4GBKS\Loader::file_ver( $filepath ),
 		);
 	}

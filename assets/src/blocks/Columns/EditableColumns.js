@@ -2,6 +2,7 @@ import { LAYOUT_NO_IMAGE, LAYOUT_ICONS, LAYOUT_TASKS, LAYOUT_IMAGES } from './Co
 import { MediaUpload, MediaUploadCheck } from '@wordpress/block-editor';
 import { Button } from '@wordpress/components';
 import { ColumnsImagePlaceholder } from './ColumnsImagePlaceholder';
+import { ImageHoverControls } from '../../components/ImageHoverControls';
 
 const { __ } = wp.i18n;
 const { RichText } = wp.blockEditor;
@@ -13,66 +14,45 @@ export const EditableColumns = ({
   isCampaign,
   columnImages,
 }) => {
-  const getImageOrButton = (openEvent, index) => {
-    if (columns[index] && columns[index].attachment && (0 < columns[index].attachment)) {
-      return (
-        <>
-          <div className='columns-image-container'>
-            <div className='buttons-overlay'>
-              <Button
-                onClick={openEvent}
-                icon='edit'
-                isPrimary
-                className='edit-image'
-              >
-                {columns_block_style !== LAYOUT_ICONS && __('Edit', 'planet4-blocks-backend')}
-              </Button>
-              <Button
-                className='remove-image'
-                onClick={() => toAttribute('attachment', index)(0)}
-                icon='trash'
-              />
-            </div>
-            <img
-              src={columnImages[columns[index].attachment]}
-              onClick={openEvent}
-            />
-          </div>
-        </>
+  const getImageOrButton = (openMediaModal, index) => {
+    if ((0 < columns[index].attachment)) {
 
-      );
+      return <div className='columns-image-container'>
+        <ImageHoverControls
+          onEdit={openMediaModal}
+          onRemove={() => toAttribute('attachment', index)(0)}
+          isCompact={columns_block_style === LAYOUT_ICONS}
+        />
+        <img src={columnImages[columns[index].attachment]} />
+      </div>;
     }
 
     if (columns_block_style === LAYOUT_TASKS) {
-      return (
-        <Button
-            onClick={openEvent}
-            icon='plus-alt2'
-            isPrimary
-            className='tasks-image-button'
-          >
-          {__('Add image', 'planet4-blocks-backend')}
-        </Button>
-      );
+      return <Button
+        onClick={openMediaModal}
+        icon='plus-alt2'
+        isPrimary
+        className='tasks-image-button'
+      >
+        {__('Add image', 'planet4-blocks-backend')}
+      </Button>;
     }
 
-    return (
-      <div className='image-placeholder-container'>
-        <ColumnsImagePlaceholder
-          width={columns_block_style !== LAYOUT_ICONS ? '100%' : 100}
-          height={columns_block_style !== LAYOUT_ICONS ? 250 : 100}
-        />
-        <Button
-          onClick={openEvent}
-          icon='plus-alt2'
-          isPrimary
-          className='image-placeholder-button'
-        >
-          {/* For the Icons style we only show the button icon */}
-          {columns_block_style !== LAYOUT_ICONS ? __('Add image', 'planet4-blocks-backend') : ''}
-        </Button>
-      </div>
-    );
+    return <div className='image-placeholder-container'>
+      <ColumnsImagePlaceholder
+        width={columns_block_style !== LAYOUT_ICONS ? '100%' : 100}
+        height={columns_block_style !== LAYOUT_ICONS ? 250 : 100}
+      />
+      <Button
+        onClick={openMediaModal}
+        icon='plus-alt2'
+        isPrimary
+        className='image-placeholder-button'
+      >
+        {/* For the Icons style we only show the button icon */}
+        {columns_block_style !== LAYOUT_ICONS ? __('Add image', 'planet4-blocks-backend') : ''}
+      </Button>
+    </div>;
   };
 
   return (
@@ -108,7 +88,6 @@ export const EditableColumns = ({
               placeholder={__('Enter column header', 'planet4-blocks-backend')}
               value={column.title}
               onChange={toAttribute('title', index)}
-              keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               allowedFormats={[]}
               multiline='false'
@@ -118,7 +97,6 @@ export const EditableColumns = ({
               placeholder={__('Enter column description', 'planet4-blocks-backend')}
               value={column.description}
               onChange={toAttribute('description', index)}
-              keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               allowedFormats={['core/bold', 'core/italic']}
             />
@@ -137,7 +115,7 @@ export const EditableColumns = ({
               tagName='div'
               className={isCampaign || [LAYOUT_NO_IMAGE, LAYOUT_TASKS].includes(columns_block_style) ?
                 `btn btn-${isCampaign ? 'primary' : 'secondary'}` :
-                'call-to-action-link'
+                ''
               }
               placeholder={[LAYOUT_NO_IMAGE, LAYOUT_TASKS].includes(columns_block_style) ?
                 __('Enter column button text', 'planet4-blocks-backend') :
@@ -145,7 +123,6 @@ export const EditableColumns = ({
               }
               value={column.cta_text}
               onChange={toAttribute('cta_text', index)}
-              keepPlaceholderOnFocus={true}
               withoutInteractiveFormatting
               allowedFormats={[]}
             />

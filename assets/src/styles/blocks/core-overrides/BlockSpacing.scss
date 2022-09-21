@@ -1,42 +1,48 @@
 .wp-block-quote,
 .wp-block-file,
 .wp-block-button,
-div.page-template > h2,
-div.page-template > ul > li:last-of-type,
-div.page-template > p,
+.page-content > .wp-block-group,
+.post-details > .wp-block-group,
+.page-content > h2,
+.page-content > ul > li:last-of-type,
+.page-content > ol > li:last-of-type,
+.page-content > p,
 .post-details > h2,
 .post-details > ul > li:last-of-type,
+.post-details > ol > li:last-of-type,
 .post-details > p,
 .post-details > p:first-of-type {
-  margin-top: $space-xs;
-  margin-bottom: $space-md;
+  margin-top: $sp-1;
+  margin-bottom: $sp-2;
 
   @include large-and-up {
-    margin-top: $space-md;
-    margin-bottom: $space-lg;
+    margin-top: $sp-2;
+    margin-bottom: $sp-4;
   }
 }
 
-div.page-template > ul > li,
-.post-details > ul > li {
-  margin-top: $space-xs;
-  margin-bottom: $space-xs;
+.page-content > ul > li,
+.post-details > ul > li,
+.page-content > ol > li,
+.post-details > ol > li {
+  margin-top: $sp-1;
+  margin-bottom: $sp-1;
 
   @include large-and-up {
-    margin-top: $space-md;
-    margin-bottom: $space-md;
+    margin-top: $sp-2;
+    margin-bottom: $sp-2;
   }
 }
 
 .wp-block-quote,
 .wp-block-file,
 .wp-block-button,
-div.page-template > h2,
+.page-content > h2,
 .post-details > h2 {
   display: inline-block;
 }
 
-div.page-template > ul,
+.page-content > ul,
 .post-details > ul {
   width: 100%;
 }

@@ -5,53 +5,36 @@ export const Caption = ({ slide, index, changeSlideAttribute }) => (
   <div className='carousel-caption'>
     <div className='caption-overlay'></div>
     <div className='container main-header'>
-      <div className='row'>
-        <div className='col'>
-          <div className='carousel-captions-wrapper'>
-            <RichText
-              tagName='h1'
-              placeholder={__('Enter title', 'planet4-blocks-backend')}
-              value={slide.header}
-              onChange={changeSlideAttribute('header', index)}
-              keepPlaceholderOnFocus={true}
-              withoutInteractiveFormatting
-              allowedFormats={[]}
-              multiline='false'
-            />
-            <RichText
-              tagName='p'
-              placeholder={__('Enter description', 'planet4-blocks-backend')}
-              value={slide.description}
-              onChange={changeSlideAttribute('description', index)}
-              keepPlaceholderOnFocus={true}
-              withoutInteractiveFormatting
-              allowedFormats={[]}
-            />
-          </div>
+      <div className='carousel-captions-wrapper'>
+        <RichText
+          tagName='h2'
+          placeholder={__('Enter title', 'planet4-blocks-backend')}
+          value={slide.header}
+          onChange={changeSlideAttribute('header', index)}
+          withoutInteractiveFormatting
+          allowedFormats={[]}
+          multiline='false'
+        />
+        <RichText
+          tagName='p'
+          placeholder={__('Enter description', 'planet4-blocks-backend')}
+          value={slide.description}
+          onChange={changeSlideAttribute('description', index)}
+          withoutInteractiveFormatting
+          allowedFormats={[]}
+        />
+      </div>
 
-          <div className='col-xs-12 col-sm-8 col-md-4 action-button'>
-            <a href={slide.link_url}
-              target={slide.link_url_new_tab ? '_blank' : '_self'}
-              className='btn btn-primary btn-block'
-              data-ga-category='Carousel Header'
-              data-ga-action='Call to Action'
-              rel='noopener noreferrer'
-              data-ga-label={slide.index}
-              onClick={e => e.preventDefault()}
-            >
-              <RichText
-                tagName='span'
-                className=''
-                placeholder={__('Enter CTA text', 'planet4-blocks-backend')}
-                value={slide.link_text}
-                onChange={changeSlideAttribute('link_text', index)}
-                keepPlaceholderOnFocus={true}
-                withoutInteractiveFormatting
-                allowedFormats={[]}
-              />
-            </a>
-          </div>
-        </div>
+      <div className='col-xs-12 col-sm-8 col-md-4 action-button'>
+        <RichText
+          tagName='div'
+          className='btn btn-primary btn-block'
+          placeholder={__('Enter CTA text', 'planet4-blocks-backend')}
+          value={slide.link_text}
+          onChange={changeSlideAttribute('link_text', index)}
+          withoutInteractiveFormatting
+          allowedFormats={[]}
+        />
       </div>
     </div>
   </div>

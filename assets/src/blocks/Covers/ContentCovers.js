@@ -1,104 +1,86 @@
-import { useState, useEffect } from '@wordpress/element';
+import { CoversImagePlaceholder } from './CoversImagePlaceholder';
 import { IMAGE_SIZES } from './imageSizes';
 
 const { __ } = wp.i18n;
 
-const isMediumWindow = () => window.innerWidth > 576 && window.innerWidth < 992;
+export const ContentCovers = ({
+  covers,
+  initialRowsLimit,
+  row,
+  inEditor = false,
+  isCarouselLayout,
+  amountOfCoversPerRow,
+  isExample,
+}) => (
+  <div className='covers'>
+    {covers.map((cover, index) => {
+      const {
+        link,
+        srcset,
+        alt_text,
+        date_formatted,
+      } = cover;
 
-export const ContentCovers = ({ covers, initialRowsLimit, row, loadMoreCovers }) => {
-  const [amountPerRow, setAmountPerRow] = useState(isMediumWindow() ? 3 : 4);
+      const hideCover = !isCarouselLayout && !!initialRowsLimit && index >= row * amountOfCoversPerRow;
 
-  const updateRowAmount = () => setAmountPerRow(isMediumWindow() ? 3 : 4);
+      if (hideCover) {
+        return null;
+      }
 
-  // The amount of covers per row depends on the window width
-  useEffect(() => {
-    window.addEventListener('resize', updateRowAmount);
-    return () => window.removeEventListener('resize', updateRowAmount);
-  }, []);
+      const title = cover.title || cover.post_title;
+      const image = cover.image || cover.thumbnail;
+      const excerpt = cover.excerpt || cover.post_excerpt;
 
-  const showLoadMore = !!initialRowsLimit && covers.length > amountPerRow * row;
+      const contentLink = inEditor ? null : link;
 
-  return (
-    <div className='container'>
-      <div className='row publications-slider'>
-        {covers.map((cover, index) => {
-          const {
-            thumbnail,
-            link,
-            post_title,
-            srcset,
-            alt_text,
-            date_formatted,
-            post_excerpt,
-          } = cover;
-
-          // On mobile because of the carousel layout we want to show all covers,
-          // no matter the initial rows limit
-          const hideCover = window.innerWidth >= 576 && !!initialRowsLimit && index >= row * amountPerRow;
-
-          if (hideCover) {
-            return null;
-          }
-
-          return (
-            <div key={post_title} className='col-md-4 col-lg-3 post-column'>
-              <div className='content-covers-block-wrap clearfix'>
-                <div className='content-covers-block-info'>
-                  <div className='content-covers-block-symbol'>
-                    {thumbnail &&
-                      <a
-                        href={link}
-                        data-ga-category='Content Covers'
-                        data-ga-action='Image'
-                        data-ga-label='n/a'
-                        aria-label={__('Cover image, link to ' + post_title, 'planet4-blocks')}
-                      >
-                        <img
-                          loading='lazy'
-                          src={thumbnail}
-                          alt={alt_text}
-                          title={alt_text}
-                          srcSet={srcset}
-                          sizes={IMAGE_SIZES.content}
-                        />
-                      </a>
-                    }
-                  </div>
-                  <div className='content-covers-block-information'>
-                    {post_title &&
-                      <h5>
-                        <a
-                          href={link}
-                          data-ga-category='Content Covers'
-                          data-ga-action='Title'
-                          data-ga-label='n/a'
-                        >
-                          {post_title}
-                        </a>
-                      </h5>
-                    }
-                    {date_formatted &&
-                      <p className='publication-date'>{date_formatted}</p>
-                    }
-                    {post_excerpt &&
-                      <p className='d-none d-md-block' dangerouslySetInnerHTML={{ __html: post_excerpt }} />
-                    }
-                  </div>
-                </div>
+      return (
+        <div key={link} className='post-column cover'>
+          <div className='content-covers-block-wrap clearfix'>
+            <div className='content-covers-block-info'>
+              <div className='content-covers-block-image' {...isExample && { style: { height: 120 } }}>
+                {image && !isExample &&
+                  <a
+                    href={contentLink}
+                    data-ga-category='Content Covers'
+                    data-ga-action='Image'
+                    data-ga-label='n/a'
+                    aria-label={__('Cover image, link to ', 'planet4-blocks') + title}
+                  >
+                    <img
+                      loading='lazy'
+                      src={image}
+                      alt={alt_text}
+                      title={alt_text}
+                      srcSet={srcset}
+                      sizes={IMAGE_SIZES.content}
+                    />
+                  </a>
+                }
+                {isExample && <CoversImagePlaceholder height='100%' />}
+              </div>
+              <div className='content-covers-block-information'>
+                {title &&
+                  <h5>
+                    <a
+                      href={contentLink}
+                      data-ga-category='Content Covers'
+                      data-ga-action='Title'
+                      data-ga-label='n/a'
+                      dangerouslySetInnerHTML={{ __html: title }}
+                    />
+                  </h5>
+                }
+                {date_formatted &&
+                  <p className='publication-date'>{date_formatted}</p>
+                }
+                {excerpt &&
+                  <p className='post-excerpt' dangerouslySetInnerHTML={{ __html: excerpt }} />
+                }
               </div>
             </div>
-          );
-        })}
-      </div>
-      {showLoadMore &&
-        <div className='row load-more-posts-button-div'>
-          <div className='col-md-12 col-lg-5 col-xl-5'>
-            <button onClick={loadMoreCovers} className='btn btn-block btn-secondary btn-load-more-posts-click'>
-              {__('Load more', 'planet4-blocks')}
-            </button>
           </div>
         </div>
-      }
-    </div>
-  );
-}
+      );
+    })}
+  </div>
+);

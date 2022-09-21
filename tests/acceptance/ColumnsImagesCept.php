@@ -42,19 +42,19 @@ $I->havePageInDatabase(
 $I->amOnPage( '/' . $slug );
 
 // Check the Tasks style
-$I->see( 'Images Columns', '.block-style-image > div > header > h2' );
-$I->see( 'Images Column Block description', '.block-style-image > div > div' );
+$I->see( 'Images Columns', '.block-style-image > header > h2' );
+$I->see( 'Images Column Block description', '.block-style-image > div.page-section-description' );
 
 // Column 1.
 $I->see( 'Column 1', 'h3 > a' );
 $I->see( 'Column 1 description', '.column-wrap p' );
 $I->seeElement( '.attachment-container > a > img' );
-$I->see( 'Act', 'div:nth-child(1) > a.call-to-action-link' );
+$I->see( 'Act', 'div:nth-child(1) > a.standalone-link' );
 // Open in new tab setting.
-$I->canSeeElement( 'div:nth-child(1) > a.call-to-action-link', [ 'target' => '_blank' ] );
+$I->canSeeElement( 'div:nth-child(1) > a.standalone-link', [ 'target' => '_blank' ] );
 
 // Column 2.
 $I->see( 'Column 2', 'h3 > a' );
 $I->see( 'Column 2 description', '.column-wrap p' );
 $I->seeElement( '.attachment-container > a > img' );
-$I->see( 'Explore', 'a.call-to-action-link' );
+$I->see( 'Explore', 'a.standalone-link' );

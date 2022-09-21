@@ -14,11 +14,18 @@
     "wp-coding-standards/wpcs": "^2.2.0",
     "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
     "stevegrunwell/phpunit-markup-assertions": "^1.2",
-    "phpunit/phpunit": "^6.2"
+    "phpunit/phpunit": "^6.2",
+    "yoast/phpunit-polyfills": "^1.0"
   },
   "require": {},
   "scripts": {
     "fixes": "vendor/bin/phpcbf",
     "sniffs": "vendor/bin/phpcs"
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
   }
 }

@@ -7,8 +7,6 @@ orbs:
 workflows:
   branch:
     jobs:
-      - php73-tests:
-          context: org-global
       - php74-tests:
           context: org-global
       - frontend-tests:
@@ -83,7 +81,9 @@ job-references:
           command: |
             mkdir -p /tmp/test-results/phpunit
             rm -rf $WP_TESTS_DIR $WP_CORE_DIR
-            bash bin/install-wp-tests.sh wordpress_test root '' 127.0.0.1 latest
+            base=$(curl -s https://raw.githubusercontent.com/greenpeace/planet4-base/main/composer.json)
+            WP_VERSION=$(jq -r '.extra["wp-version"] // empty' \<<< "${base}")
+            bash bin/install-wp-tests.sh wordpress_test root '' 127.0.0.1 $WP_VERSION
             XDEBUG_MODE=coverage vendor/bin/phpunit --log-junit /tmp/test-results/phpunit/$CIRCLE_STAGE.xml --coverage-html /tmp/coverage-report --coverage-text
       - store_test_results:
           path: /tmp/test-results
@@ -184,23 +184,13 @@ commands:
           path: planet4-docker-compose/artifacts
 
 jobs:
-  php73-tests:
-    <<: *php_job
-    docker:
-      - image: greenpeaceinternational/p4-unit-tests:php7.3
-        auth:
-          <<: *docker_auth
-      - image: circleci/mysql:5.7.26
-        auth:
-          <<: *docker_auth
-
   php74-tests:
     <<: *php_job
     docker:
       - image: greenpeaceinternational/p4-unit-tests:php7.4
         auth:
           <<: *docker_auth
-      - image: circleci/mysql:5.7.26
+      - image: cimg/mysql:5.7
         auth:
           <<: *docker_auth
 
@@ -218,7 +208,13 @@ jobs:
       - run:
           name: Lint JS
           when: always
-          command: eslint public/js/**/*.js tests/js
+          # For now lint only changed files to avoid bulk fixing.
+          command: |
+            changed_files=$(git diff --name-only master...HEAD -- {public/js,tests/js,assets/src}/**/*.js)
+            echo "Changed files:"
+            echo $changed_files | tr " " "\n"
+            if [ -z "$changed_files" ]; then exit 0; fi
+            npm install && eslint --ext .js $(echo "$changed_files" | xargs)
       - store_test_results:
           path: /tmp/test-results
 
@@ -344,7 +340,7 @@ jobs:
           command: npm run build
       - run:
           name: Remove unnecessary files
-          command: rm -rf .circleci .git .githooks assets/src bin tests
+          command: rm -rf .circleci .git .githooks assets/src bin
       - run:
           name: Inject version to composer
           command: |

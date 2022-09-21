@@ -1,13 +1,12 @@
 @import "../../master-theme/assets/src/scss/base/colors";
 @import "../../master-theme/assets/src/scss/base/mixins";
 @import "../../master-theme/assets/src/scss/base/variables";
+@import "./SidebarSlidesEditor.scss";
 
-.carousel-sidebar-slide {
-  border-top-width: 3px;
-}
-
-.carousel-sidebar-insert-before {
-  border-top: 3px solid var(--wp-admin-theme-color, blue) !important;
+// Fix for the block being inside of a wrapper element.
+// We can remove this fix once this block starts using the v2 block registration API.
+div[data-type="planet4-blocks/carousel-header"] {
+  max-width: 100vw !important;
 }
 
 .visually-hidden {
@@ -76,6 +75,7 @@
     font-size: 14px;
     border: none;
     outline: none;
+    white-space: nowrap;
 
     .dashicon {
       margin-inline-end: 10px;
@@ -109,4 +109,9 @@
   .carousel-header .carousel-item .carousel-caption .main-header .row {
     padding-inline-start: 110px;
   }
+}
+
+// Fix Safari issue with forced min-width:1px in editor
+.carousel-header .carousel-item .carousel-caption .main-header .action-button div.btn {
+  overflow: initial;
 }
